@@ -4,9 +4,19 @@
   "description": "Opencode plugin for initiative/wiki workflow management",
   "license": "MIT",
   "author": "",
-  "keywords": ["opencode", "plugin", "docs", "workflow"],
-  "engines": { "node": ">=18.0.0" },
-  "repository": { "type": "git", "url": "" },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "docs",
+    "workflow"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -18,10 +28,11 @@
     "@opencode-ai/plugin": "^1.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.0.0",
     "jest": "^29.0.0",
     "ts-jest": "^29.0.0",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.0.0"
   },
   "files": [
     "dist",

@@ -19,10 +19,10 @@ export interface Initiative {
   updated: string;
   owner: string;
   tags: string[];
-  related_wiki: string[];
+  relatedWiki: string[];
   objective: string;
   plan: string[];
-  progress_log: string[];
+  progressLog: string[];
   artifacts: string[];
 }
 
@@ -32,13 +32,13 @@ export interface WikiEntry {
   category: string;
   created: string;
   updated: string;
-  related_initiatives: string[];
+  relatedInitiatives: string[];
   tags: string[];
   content: string;
 }
 
 export interface WorkflowState {
-  current_step: StepName;
-  active_initiative: string | null;
-  step_history: { step: StepName; timestamp: string }[];
+  currentStep: StepName;
+  activeInitiative: string | null;
+  stepHistory: { step: StepName; timestamp: string }[];
 }

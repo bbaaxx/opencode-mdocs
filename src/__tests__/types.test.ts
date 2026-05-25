@@ -1,33 +1,45 @@
 import { Initiative, WikiEntry, WorkflowState } from '../types';
 
-const initiative: Initiative = {
-  id: 'test-init',
-  title: 'Test Initiative',
-  status: 'active',
-  created: '2025-05-24',
-  updated: '2025-05-24',
-  owner: 'test-owner',
-  tags: ['test'],
-  related_wiki: ['wiki/test'],
-  objective: 'Test objective',
-  plan: ['Step 1'],
-  progress_log: [],
-  artifacts: []
-};
+describe('Types', () => {
+  test('Initiative type accepts valid data', () => {
+    const initiative: Initiative = {
+      id: 'test-init',
+      title: 'Test Initiative',
+      status: 'active',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      owner: 'test-owner',
+      tags: ['test'],
+      relatedWiki: ['wiki/test'],
+      objective: 'Test objective',
+      plan: ['Step 1'],
+      progressLog: [],
+      artifacts: []
+    };
+    expect(initiative.id).toBe('test-init');
+    expect(initiative.status).toBe('active');
+  });
 
-const wikiEntry: WikiEntry = {
-  id: 'wiki-test',
-  title: 'Wiki Test',
-  category: 'test',
-  created: '2025-05-24',
-  updated: '2025-05-24',
-  related_initiatives: ['test-init'],
-  tags: ['test'],
-  content: 'Test content'
-};
+  test('WikiEntry type accepts valid data', () => {
+    const wikiEntry: WikiEntry = {
+      id: 'wiki-test',
+      title: 'Wiki Test',
+      category: 'test',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      relatedInitiatives: ['test-init'],
+      tags: ['test'],
+      content: 'Test content'
+    };
+    expect(wikiEntry.category).toBe('test');
+  });
 
-const workflowState: WorkflowState = {
-  current_step: 'IDLE',
-  active_initiative: null,
-  step_history: []
-};
+  test('WorkflowState type accepts valid data', () => {
+    const workflowState: WorkflowState = {
+      currentStep: 'IDLE',
+      activeInitiative: null,
+      stepHistory: []
+    };
+    expect(workflowState.currentStep).toBe('IDLE');
+  });
+});
