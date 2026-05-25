@@ -2,6 +2,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Initiative } from './types';
 
+function parseSection(content: string, sectionName: string): string {
+  const match = content.match(new RegExp(`## ${sectionName}\\n([\\s\\S]*?)(?=\\n## |$)`));
+  return match ? match[1].trim() : '';
+}
+
+function parseListSection(content: string, sectionName: string): string[] {
+  const section = parseSection(content, sectionName);
+  return section.split('\n').filter(line => line.trim().startsWith('- ')).map(line => line.replace(/^- /, '').trim());
+}
+
 export class InitiativeManager {
   private dir: string;
 
@@ -58,7 +68,7 @@ export class InitiativeManager {
   private parseInitiative(content: string, fileName: string): Initiative {
     const match = content.match(/---\n([\s\S]*?)\n---/);
     if (!match) throw new Error(`Invalid initiative format: ${fileName}`);
-    
+
     // Parse YAML frontmatter (simplified - keys are snake_case)
     const front: Record<string, any> = {};
     for (const line of match[1].split('\n')) {
@@ -73,6 +83,9 @@ export class InitiativeManager {
       }
     }
 
+    // Extract markdown body after frontmatter
+    const body = content.replace(/---\n[\s\S]*?\n---/, '').trim();
+
     return {
       id: front.id || '',
       title: front.title || '',
@@ -82,11 +95,29 @@ export class InitiativeManager {
       owner: front.owner || '',
       tags: front.tags || [],
       relatedWiki: front.related_wiki || [],
-      objective: '',
-      plan: [],
-      progressLog: [],
-      artifacts: []
+      // Parse markdown sections
+      objective: parseSection(body, 'Objective'),
+      plan: parseListSection(body, 'Plan'),
+      progressLog: parseListSection(body, 'Progress Log'),
+      artifacts: parseListSection(body, 'Artifacts')
     };
+  }
+
+  update(fileName: string, initiative: Initiative): string {
+    // Delete old file if name changed
+    const oldPath = path.join(this.dir, fileName);
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
+    }
+    return this.create(initiative);
+  }
+
+  delete(fileName: string): void {
+    const filePath = path.join(this.dir, fileName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      this.updateIndex();
+    }
   }
 
   findRelated(queryTags: string[]): Initiative[] {
