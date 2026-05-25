@@ -131,13 +131,29 @@ export class InitiativeManager {
 
   findRelated(queryTags: string[]): Initiative[] {
     const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
-    const initiatives = files.map(f => this.read(f)).filter(Boolean) as Initiative[];
+    const initiatives: Initiative[] = [];
+    for (const f of files) {
+      try {
+        const init = this.read(f);
+        if (init) initiatives.push(init);
+      } catch {
+        // Skip malformed files
+      }
+    }
     return initiatives.filter(i => i.tags.some(t => queryTags.includes(t)));
   }
 
   private updateIndex(): void {
     const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
-    const initiatives = files.map(f => this.read(f)).filter(Boolean) as Initiative[];
+    const initiatives: Initiative[] = [];
+    for (const f of files) {
+      try {
+        const init = this.read(f);
+        if (init) initiatives.push(init);
+      } catch {
+        // Skip malformed files
+      }
+    }
     const lines = initiatives.map(i => `- **${i.title}** (${i.status}) — ${i.created} — [${i.tags.join(', ')}]`);
     const index = `# Initiatives\n\n${lines.join('\n') || 'No initiatives yet.'}`;
     fs.writeFileSync(path.join(this.dir, 'INDEX.md'), index, 'utf8');

@@ -12,7 +12,7 @@ beforeEach(() => {
   fs.mkdirSync(testDir, { recursive: true });
 });
 
-afterAll(() => {
+afterEach(() => {
   if (fs.existsSync(testDir)) {
     fs.rmSync(testDir, { recursive: true, force: true });
   }
@@ -222,5 +222,17 @@ describe('InitiativeManager', () => {
     const manager = new InitiativeManager(testDir);
     fs.writeFileSync(path.join(testDir, 'initiatives', 'invalid.md'), 'not valid markdown');
     expect(() => manager.read('invalid.md')).toThrow('Invalid initiative format');
+  });
+
+  test('read sanitizes path traversal attempts', () => {
+    const manager = new InitiativeManager(testDir);
+    const result = manager.read('../../../etc/passwd');
+    expect(result).toBeNull(); // Should not read outside initiatives dir
+  });
+
+  test('delete sanitizes path traversal attempts', () => {
+    const manager = new InitiativeManager(testDir);
+    // Should not throw and should not delete anything outside initiatives dir
+    expect(() => manager.delete('../../../etc/passwd')).not.toThrow();
   });
 });
