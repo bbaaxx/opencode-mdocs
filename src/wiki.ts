@@ -24,9 +24,11 @@ export class WikiManager {
   }
 
   create(entry: WikiEntry): string {
-    const categoryDir = path.join(this.dir, entry.category);
+    const category = path.basename(entry.category);
+    const id = path.basename(entry.id);
+    const categoryDir = path.join(this.dir, category);
     fs.mkdirSync(categoryDir, { recursive: true });
-    const filePath = path.join(categoryDir, `${entry.id}.md`);
+    const filePath = path.join(categoryDir, `${id}.md`);
     const content = this.toFrontmatter(entry) + entry.content;
     fs.writeFileSync(filePath, content, 'utf8');
     this.updateIndices();
@@ -43,8 +45,15 @@ export class WikiManager {
       const files = fs.readdirSync(catDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
       const lines = files.map(f => {
         const content = fs.readFileSync(path.join(catDir, f), 'utf8');
-        const match = content.match(/title: "([^"]+)"/);
-        return `- ${match ? match[1] : f.replace('.md', '')}`;
+        const frontmatterMatch = content.match(/---\n([\s\S]*?)\n---/);
+        if (frontmatterMatch) {
+          const titleMatch = frontmatterMatch[1].match(/title: "([^"]+)"/);
+          if (titleMatch) return `- ${titleMatch[1]}`;
+          // Try without quotes
+          const unquotedMatch = frontmatterMatch[1].match(/title: (.+)/);
+          if (unquotedMatch) return `- ${unquotedMatch[1].trim()}`;
+        }
+        return `- ${f.replace('.md', '')}`;
       });
       const index = `# ${category}\n\n${lines.join('\n') || 'No entries yet.'}`;
       fs.writeFileSync(path.join(catDir, 'INDEX.md'), index, 'utf8');

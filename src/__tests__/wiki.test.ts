@@ -57,4 +57,22 @@ describe('WikiManager', () => {
     const catIndex = fs.readFileSync(path.join(testDir, 'wiki', 'architecture', 'INDEX.md'), 'utf8');
     expect(catIndex).toContain('Entry One');
   });
+
+  test('create sanitizes path traversal in category and id', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: '../../../etc/passwd',
+      title: 'Bad Entry',
+      category: '../..',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'Should be sanitized'
+    });
+
+    // Should create in wiki/etc-passwd/etc-passwd.md (sanitized basename)
+    const safePath = path.join(testDir, 'wiki', '..', '..', 'etc-passwd.md');
+    expect(fs.existsSync(safePath)).toBe(false); // Should NOT be outside wiki
+  });
 });
