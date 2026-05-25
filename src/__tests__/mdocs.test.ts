@@ -16,6 +16,30 @@ afterEach(() => {
   }
 });
 
+test('exists returns false before init', () => {
+  const manager = new MdocsManager(testDir);
+  expect(manager.exists()).toBe(false);
+});
+
+test('exists returns true after init', () => {
+  const manager = new MdocsManager(testDir);
+  manager.init();
+  expect(manager.exists()).toBe(true);
+});
+
+test('init is idempotent', () => {
+  const manager = new MdocsManager(testDir);
+  manager.init();
+
+  const initiativesIndexPath = path.join(testDir, 'initiatives', 'INDEX.md');
+  const originalContent = fs.readFileSync(initiativesIndexPath, 'utf8');
+
+  manager.init();
+
+  const afterInitContent = fs.readFileSync(initiativesIndexPath, 'utf8');
+  expect(afterInitContent).toBe(originalContent);
+});
+
 test('init creates directory structure', () => {
   const manager = new MdocsManager(testDir);
   manager.init();

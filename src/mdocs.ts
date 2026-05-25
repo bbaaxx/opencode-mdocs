@@ -5,6 +5,9 @@ export class MdocsManager {
   private baseDir: string;
 
   constructor(baseDir: string) {
+    if (!baseDir || typeof baseDir !== 'string') {
+      throw new Error('baseDir must be a non-empty string');
+    }
     this.baseDir = path.resolve(baseDir);
   }
 
@@ -26,7 +29,14 @@ export class MdocsManager {
   }
 
   exists(): boolean {
-    return fs.existsSync(path.join(this.baseDir, 'initiatives')) &&
-           fs.existsSync(path.join(this.baseDir, 'wiki'));
+    const initiativesPath = path.join(this.baseDir, 'initiatives');
+    const wikiPath = path.join(this.baseDir, 'wiki');
+
+    if (!fs.existsSync(initiativesPath) || !fs.existsSync(wikiPath)) {
+      return false;
+    }
+
+    return fs.statSync(initiativesPath).isDirectory() &&
+           fs.statSync(wikiPath).isDirectory();
   }
 }
