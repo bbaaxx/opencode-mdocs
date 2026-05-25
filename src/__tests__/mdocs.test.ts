@@ -49,3 +49,19 @@ test('init creates directory structure', () => {
   expect(fs.existsSync(path.join(testDir, 'initiatives', 'INDEX.md'))).toBe(true);
   expect(fs.existsSync(path.join(testDir, 'wiki', 'INDEX.md'))).toBe(true);
 });
+
+test('constructor throws for empty string', () => {
+  expect(() => new MdocsManager('')).toThrow('baseDir must be a non-empty string');
+});
+
+test('constructor throws for non-string', () => {
+  expect(() => new MdocsManager(123 as any)).toThrow('baseDir must be a non-empty string');
+});
+
+test('exists returns false when initiatives is a file not directory', () => {
+  fs.mkdirSync(testDir, { recursive: true });
+  fs.writeFileSync(path.join(testDir, 'initiatives'), 'not a dir');
+  fs.mkdirSync(path.join(testDir, 'wiki'), { recursive: true });
+  const manager = new MdocsManager(testDir);
+  expect(manager.exists()).toBe(false);
+});
