@@ -1,0 +1,25 @@
+{
+  "name": "opencode-mdocs",
+  "version": "0.1.0",
+  "description": "Opencode plugin for initiative/wiki workflow management",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "agents",
+    "templates"
+  ]
+}
