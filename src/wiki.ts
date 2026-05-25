@@ -23,9 +23,17 @@ export class WikiManager {
     return `---\n${Object.entries(front).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n\n`;
   }
 
+  private sanitizeName(name: string): string {
+    const base = path.basename(name);
+    if (!base || base === '.' || base === '..') {
+      throw new Error(`Invalid name: ${name}`);
+    }
+    return base;
+  }
+
   create(entry: WikiEntry): string {
-    const category = path.basename(entry.category);
-    const id = path.basename(entry.id);
+    const category = this.sanitizeName(entry.category);
+    const id = this.sanitizeName(entry.id);
     const categoryDir = path.join(this.dir, category);
     fs.mkdirSync(categoryDir, { recursive: true });
     const filePath = path.join(categoryDir, `${id}.md`);

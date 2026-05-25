@@ -60,7 +60,9 @@ describe('WikiManager', () => {
 
   test('create sanitizes path traversal in category and id', () => {
     const manager = new WikiManager(testDir);
-    manager.create({
+    
+    // These should throw because path traversal is rejected
+    expect(() => manager.create({
       id: '../../../etc/passwd',
       title: 'Bad Entry',
       category: '../..',
@@ -68,11 +70,11 @@ describe('WikiManager', () => {
       updated: '2025-05-24',
       relatedInitiatives: [],
       tags: [],
-      content: 'Should be sanitized'
-    });
-
-    // Should create in wiki/etc-passwd/etc-passwd.md (sanitized basename)
-    const safePath = path.join(testDir, 'wiki', '..', '..', 'etc-passwd.md');
-    expect(fs.existsSync(safePath)).toBe(false); // Should NOT be outside wiki
+      content: 'Should be rejected'
+    })).toThrow('Invalid name');
+    
+    // Verify no file was created outside wiki
+    const escapedPath = path.join(testDir, '..', 'passwd.md');
+    expect(fs.existsSync(escapedPath)).toBe(false);
   });
 });
