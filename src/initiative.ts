@@ -56,6 +56,11 @@ export class InitiativeManager {
   create(initiative: Initiative): string {
     const fileName = this.formatFileName(initiative);
     const filePath = path.join(this.dir, fileName);
+
+    if (fs.existsSync(filePath)) {
+      throw new Error(`Initiative file already exists: ${fileName}`);
+    }
+
     const content = this.toFrontmatter(initiative) +
       `## Objective\n${initiative.objective}\n\n` +
       `## Plan\n${initiative.plan.map(p => `- ${p}`).join('\n')}\n\n` +

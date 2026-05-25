@@ -235,4 +235,25 @@ describe('InitiativeManager', () => {
     // Should not throw and should not delete anything outside initiatives dir
     expect(() => manager.delete('../../../etc/passwd')).not.toThrow();
   });
+
+  test('create throws when file already exists', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiative: Initiative = {
+      id: 'test-init',
+      title: 'Test Initiative',
+      status: 'active',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      owner: 'test-owner',
+      tags: ['test'],
+      relatedWiki: [],
+      objective: 'Test',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    };
+
+    manager.create(initiative);
+    expect(() => manager.create(initiative)).toThrow('already exists');
+  });
 });
