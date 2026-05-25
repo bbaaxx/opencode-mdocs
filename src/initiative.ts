@@ -3,7 +3,8 @@ import * as path from 'path';
 import { Initiative } from './types';
 
 function parseSection(content: string, sectionName: string): string {
-  const match = content.match(new RegExp(`## ${sectionName}\\n([\\s\\S]*?)(?=\\n## |$)`));
+  const escaped = sectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = content.match(new RegExp(`## ${escaped}\\n([\\s\\S]*?)(?=\\n## |$)`));
   return match ? match[1].trim() : '';
 }
 
@@ -27,6 +28,11 @@ export class InitiativeManager {
   private formatFileName(initiative: Initiative): string {
     const slug = this.slugify(initiative.title);
     return `${slug}--${initiative.created}.md`;
+  }
+
+  private sanitizeFileName(fileName: string): string {
+    // Remove any path separators to prevent directory traversal
+    return path.basename(fileName);
   }
 
   private toFrontmatter(initiative: Initiative): string {
@@ -59,7 +65,8 @@ export class InitiativeManager {
   }
 
   read(fileName: string): Initiative | null {
-    const filePath = path.join(this.dir, fileName);
+    const sanitized = this.sanitizeFileName(fileName);
+    const filePath = path.join(this.dir, sanitized);
     if (!fs.existsSync(filePath)) return null;
     const content = fs.readFileSync(filePath, 'utf8');
     return this.parseInitiative(content, fileName);
@@ -104,8 +111,9 @@ export class InitiativeManager {
   }
 
   update(fileName: string, initiative: Initiative): string {
+    const sanitized = this.sanitizeFileName(fileName);
     // Delete old file if name changed
-    const oldPath = path.join(this.dir, fileName);
+    const oldPath = path.join(this.dir, sanitized);
     if (fs.existsSync(oldPath)) {
       fs.unlinkSync(oldPath);
     }
@@ -113,7 +121,8 @@ export class InitiativeManager {
   }
 
   delete(fileName: string): void {
-    const filePath = path.join(this.dir, fileName);
+    const sanitized = this.sanitizeFileName(fileName);
+    const filePath = path.join(this.dir, sanitized);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
       this.updateIndex();

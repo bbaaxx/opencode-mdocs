@@ -12,6 +12,12 @@ beforeEach(() => {
   fs.mkdirSync(testDir, { recursive: true });
 });
 
+afterAll(() => {
+  if (fs.existsSync(testDir)) {
+    fs.rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
 describe('InitiativeManager', () => {
   test('create initiative file with correct format', () => {
     const manager = new InitiativeManager(testDir);
@@ -36,6 +42,13 @@ describe('InitiativeManager', () => {
     expect(files).toContain('initiatives');
     const initiativeFiles = fs.readdirSync(path.join(testDir, 'initiatives'));
     expect(initiativeFiles).toContain('test-initiative--2025-05-24.md');
+
+    const fileContent = fs.readFileSync(path.join(testDir, 'initiatives', 'test-initiative--2025-05-24.md'), 'utf8');
+    expect(fileContent).toContain('---');
+    expect(fileContent).toContain('title: "Test Initiative"');
+    expect(fileContent).toContain('## Objective');
+    expect(fileContent).toContain('## Plan');
+    expect(fileContent).toContain('- Step 1');
   });
 
   test('read initiative parses frontmatter and sections', () => {
@@ -194,5 +207,20 @@ describe('InitiativeManager', () => {
     const indexContent = fs.readFileSync(path.join(testDir, 'initiatives', 'INDEX.md'), 'utf8');
     expect(indexContent).toContain('Test Initiative');
     expect(indexContent).toContain('active');
+  });
+
+  test('findRelated returns empty array when no tags match', () => {
+    const manager = new InitiativeManager(testDir);
+    const init: Initiative = { id: 'init1', title: 'Auth', status: 'active', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: ['auth'], relatedWiki: [], objective: 'Auth', plan: [], progressLog: [], artifacts: [] };
+    manager.create(init);
+    
+    const related = manager.findRelated(['nonexistent']);
+    expect(related).toEqual([]);
+  });
+
+  test('read throws for invalid file format', () => {
+    const manager = new InitiativeManager(testDir);
+    fs.writeFileSync(path.join(testDir, 'initiatives', 'invalid.md'), 'not valid markdown');
+    expect(() => manager.read('invalid.md')).toThrow('Invalid initiative format');
   });
 });
