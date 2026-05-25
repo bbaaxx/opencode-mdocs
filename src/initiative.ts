@@ -31,8 +31,11 @@ export class InitiativeManager {
   }
 
   private sanitizeFileName(fileName: string): string {
-    // Remove any path separators to prevent directory traversal
-    return path.basename(fileName);
+    const base = path.basename(fileName);
+    if (!base || base === '.' || base === '..') {
+      return 'invalid.md'; // Return a safe fallback that won't match real files
+    }
+    return base;
   }
 
   private toFrontmatter(initiative: Initiative): string {
@@ -100,8 +103,8 @@ export class InitiativeManager {
       created: front.created || '',
       updated: front.updated || '',
       owner: front.owner || '',
-      tags: front.tags || [],
-      relatedWiki: front.related_wiki || [],
+      tags: Array.isArray(front.tags) ? front.tags : [],
+      relatedWiki: Array.isArray(front.related_wiki) ? front.related_wiki : [],
       // Parse markdown sections
       objective: parseSection(body, 'Objective'),
       plan: parseListSection(body, 'Plan'),
