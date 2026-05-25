@@ -70,17 +70,33 @@ describe('WorkflowEngine', () => {
     expect(engine.canExecuteTool('write')).toBe(true);
   });
 
-  test('blocks bash tools before COMPLETE', () => {
+  test('allows non-destructive bash commands before COMPLETE', () => {
     const engine = new WorkflowEngine(testDir);
-    expect(engine.canExecuteTool('bash')).toBe(true); // IDLE allows all
-    
     engine.advance('UNDERSTAND');
-    expect(engine.canExecuteTool('bash')).toBe(false);
     
+    expect(engine.canExecuteTool('bash', { command: 'ls -la' })).toBe(true);
+    expect(engine.canExecuteTool('bash', { command: 'cat file.txt' })).toBe(true);
+    expect(engine.canExecuteTool('bash', { command: 'echo hello' })).toBe(true);
+    expect(engine.canExecuteTool('bash', { command: 'pwd' })).toBe(true);
+  });
+
+  test('blocks destructive bash commands before COMPLETE', () => {
+    const engine = new WorkflowEngine(testDir);
+    engine.advance('UNDERSTAND');
+    
+    expect(engine.canExecuteTool('bash', { command: 'rm -rf /' })).toBe(false);
+    expect(engine.canExecuteTool('bash', { command: 'git commit -m "msg"' })).toBe(false);
+    expect(engine.canExecuteTool('bash', { command: 'mv old new' })).toBe(false);
+    
+    // After reaching COMPLETE, destructive commands are allowed
     engine.advance('DISCOVER');
     engine.advance('CONTEXT');
     engine.advance('PLAN');
-    expect(engine.canExecuteTool('bash')).toBe(false);
+    engine.advance('EXECUTE');
+    engine.advance('VERIFY');
+    engine.advance('REPORT');
+    engine.advance('COMPLETE');
+    expect(engine.canExecuteTool('bash', { command: 'git commit -m "msg"' })).toBe(true);
   });
 
   test('persists state to file', () => {

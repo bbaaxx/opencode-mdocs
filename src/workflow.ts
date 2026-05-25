@@ -54,17 +54,21 @@ export class WorkflowEngine {
     this.save();
   }
 
-  canExecuteTool(toolName: string): boolean {
+  canExecuteTool(toolName: string, toolArgs?: Record<string, any>): boolean {
     const readTools = ['read', 'glob', 'grep', 'list'];
     const writeTools = ['edit', 'write'];
-    const commitTools = ['bash'];
 
     if (readTools.includes(toolName)) return true;
     if (this.state.currentStep === 'IDLE') return true;
     if (writeTools.includes(toolName)) {
       return ['PLAN', 'EXECUTE', 'VERIFY', 'REPORT', 'COMPLETE'].includes(this.state.currentStep);
     }
-    if (commitTools.includes(toolName)) {
+    if (toolName === 'bash') {
+      // Non-destructive bash commands (ls, cat, echo, pwd, grep, etc.) are always allowed
+      const command = toolArgs?.command || toolArgs?.args?.command || '';
+      const nonDestructive = /^(ls|cat|echo|pwd|cd|which|type|head|tail|wc|sort|uniq|grep|find|date|whoami|hostname|env|printenv|id|uname|df|du|ps|top|uptime|clear|history|man|help)\b/i;
+      if (nonDestructive.test(command)) return true;
+      // Destructive commands (rm, mv, cp -f, git commit, etc.) require COMPLETE
       return this.state.currentStep === 'COMPLETE';
     }
     return true;
