@@ -65,6 +65,18 @@ describe('InitiativeManager', () => {
     expect(read!.objective).toBe('Test objective');
     expect(read!.plan).toEqual(['Step 1', 'Step 2']);
     expect(read!.progressLog).toEqual(['Started']);
+    expect(read!.status).toBe('active');
+    expect(read!.created).toBe('2025-05-24');
+    expect(read!.updated).toBe('2025-05-24');
+    expect(read!.owner).toBe('test-owner');
+    expect(read!.tags).toEqual(['test']);
+    expect(read!.artifacts).toEqual(['wiki/test']);
+  });
+
+  test('read returns null for non-existent file', () => {
+    const manager = new InitiativeManager(testDir);
+    const result = manager.read('non-existent.md');
+    expect(result).toBeNull();
   });
 
   test('find related initiatives by tag', () => {
@@ -107,6 +119,33 @@ describe('InitiativeManager', () => {
     
     const read = manager.read('test-initiative--2025-05-24.md');
     expect(read!.objective).toBe('Updated');
+  });
+
+  test('update with title change deletes old file', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiative: Initiative = {
+      id: 'test-init',
+      title: 'Old Title',
+      status: 'active',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      owner: 'test-owner',
+      tags: ['test'],
+      relatedWiki: [],
+      objective: 'Test',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    };
+
+    manager.create(initiative);
+    const updated = { ...initiative, title: 'New Title' };
+    manager.update('old-title--2025-05-24.md', updated);
+
+    const oldExists = fs.existsSync(path.join(testDir, 'initiatives', 'old-title--2025-05-24.md'));
+    const newExists = fs.existsSync(path.join(testDir, 'initiatives', 'new-title--2025-05-24.md'));
+    expect(oldExists).toBe(false);
+    expect(newExists).toBe(true);
   });
 
   test('delete initiative removes file and updates index', () => {
