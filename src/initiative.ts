@@ -120,12 +120,30 @@ export class InitiativeManager {
 
   update(fileName: string, initiative: Initiative): string {
     const sanitized = this.sanitizeFileName(fileName);
-    // Delete old file if name changed
     const oldPath = path.join(this.dir, sanitized);
-    if (fs.existsSync(oldPath)) {
-      fs.unlinkSync(oldPath);
+    const newFileName = this.formatFileName(initiative);
+    const newPath = path.join(this.dir, newFileName);
+
+    // If the filename is changing, delete old first only if new doesn't exist
+    if (oldPath !== newPath) {
+      if (fs.existsSync(newPath)) {
+        throw new Error(`Cannot update: target file already exists: ${newFileName}`);
+      }
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
     }
-    return this.create(initiative);
+
+    // Write the file (will overwrite if same name, which is expected for updates)
+    const content = this.toFrontmatter(initiative) +
+      `## Objective\n${initiative.objective}\n\n` +
+      `## Plan\n${initiative.plan.map(p => `- ${p}`).join('\n')}\n\n` +
+      `## Progress Log\n${initiative.progressLog.map(l => `- ${l}`).join('\n')}\n\n` +
+      `## Artifacts\n${initiative.artifacts.map(a => `- ${a}`).join('\n')}`;
+
+    fs.writeFileSync(newPath, content, 'utf8');
+    this.updateIndex();
+    return newPath;
   }
 
   delete(fileName: string): void {
