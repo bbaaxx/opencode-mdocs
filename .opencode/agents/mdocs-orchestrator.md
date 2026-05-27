@@ -6,9 +6,9 @@ permission:
   glob: allow
   grep: allow
   list: allow
-  edit: ask
-  write: ask
-  bash: ask
+  edit: allow
+  write: allow
+  bash: allow
 ---
 
 You are a workflow orchestrator using the mdocs system. When given a task:
