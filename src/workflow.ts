@@ -58,9 +58,42 @@ export class WorkflowEngine {
     this.save();
   }
 
+  private isMdocsOperation(toolName: string, toolArgs?: Record<string, any>): boolean {
+    // Check if any path argument references the mdocs directory
+    const args = toolArgs || {};
+    
+    // Direct file paths
+    if (args.filePath && typeof args.filePath === 'string') {
+      return args.filePath.includes('/mdocs/') || args.filePath.includes('\\mdocs\\');
+    }
+    
+    // Path parameter for glob/grep
+    if (args.path && typeof args.path === 'string') {
+      return args.path.includes('/mdocs/') || args.path.includes('\\mdocs\\');
+    }
+    
+    // Pattern that includes mdocs
+    if (args.pattern && typeof args.pattern === 'string') {
+      return args.pattern.includes('/mdocs/') || args.pattern.includes('\\mdocs\\') || args.pattern.includes('mdocs');
+    }
+    
+    // Bash commands operating on mdocs
+    if (toolName === 'bash') {
+      const command = args.command || args.args?.command || '';
+      return command.includes('/mdocs/') || command.includes('\\mdocs\\');
+    }
+    
+    return false;
+  }
+
   canExecuteTool(toolName: string, toolArgs?: Record<string, any>): boolean {
     const readTools = ['read', 'glob', 'grep', 'list'];
     const writeTools = ['edit', 'write'];
+
+    // Allow unrestricted access to mdocs knowledge files regardless of workflow step
+    if (this.isMdocsOperation(toolName, toolArgs)) {
+      return true;
+    }
 
     if (readTools.includes(toolName)) return true;
     if (this.state.currentStep === 'IDLE') return true;

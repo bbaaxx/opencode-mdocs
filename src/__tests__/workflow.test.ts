@@ -99,6 +99,40 @@ describe('WorkflowEngine', () => {
     expect(engine.canExecuteTool('bash', { command: 'git commit -m "msg"' })).toBe(true);
   });
 
+  test('allows write/edit on mdocs paths regardless of step', () => {
+    const engine = new WorkflowEngine(testDir);
+    engine.advance('UNDERSTAND');
+    
+    // These should be allowed even at UNDERSTAND because they target mdocs
+    expect(engine.canExecuteTool('write', { filePath: '/project/mdocs/initiatives/test.md' })).toBe(true);
+    expect(engine.canExecuteTool('edit', { filePath: '/project/mdocs/wiki/entry.md' })).toBe(true);
+    expect(engine.canExecuteTool('write', { filePath: '/project/mdocs/.workflow-state.json' })).toBe(true);
+    
+    // But non-mdocs paths should still be blocked
+    expect(engine.canExecuteTool('write', { filePath: '/project/src/index.ts' })).toBe(false);
+    expect(engine.canExecuteTool('edit', { filePath: '/project/README.md' })).toBe(false);
+  });
+
+  test('allows read on mdocs paths regardless of step', () => {
+    const engine = new WorkflowEngine(testDir);
+    engine.advance('UNDERSTAND');
+    
+    expect(engine.canExecuteTool('read', { filePath: '/project/mdocs/initiatives/INDEX.md' })).toBe(true);
+    expect(engine.canExecuteTool('glob', { pattern: 'mdocs/**/*.md' })).toBe(true);
+    expect(engine.canExecuteTool('grep', { pattern: 'test', path: '/project/mdocs' })).toBe(true);
+  });
+
+  test('allows bash commands on mdocs paths regardless of step', () => {
+    const engine = new WorkflowEngine(testDir);
+    engine.advance('UNDERSTAND');
+    
+    expect(engine.canExecuteTool('bash', { command: 'ls /project/mdocs/initiatives' })).toBe(true);
+    expect(engine.canExecuteTool('bash', { command: 'cat /project/mdocs/wiki/test.md' })).toBe(true);
+    
+    // Non-mdocs bash should still respect gates
+    expect(engine.canExecuteTool('bash', { command: 'git commit -m "msg"' })).toBe(false);
+  });
+
   test('persists state to file', () => {
     const engine = new WorkflowEngine(testDir);
     engine.advance('UNDERSTAND');
