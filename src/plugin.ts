@@ -7,10 +7,11 @@ import { WorkflowEngine } from './workflow';
 import { SubagentAssembler } from './subagent';
 
 export function createPlugin(baseDir: string) {
-  const mdocs = new MdocsManager(baseDir);
-  const initiatives = new InitiativeManager(baseDir);
-  const wiki = new WikiManager(baseDir);
-  const workflow = new WorkflowEngine(baseDir);
+  const mdocsRoot = path.join(baseDir, 'mdocs');
+  const mdocs = new MdocsManager(mdocsRoot);
+  const initiatives = new InitiativeManager(mdocsRoot);
+  const wiki = new WikiManager(mdocsRoot);
+  const workflow = new WorkflowEngine(mdocsRoot);
   const assembler = new SubagentAssembler();
 
   return {
@@ -101,10 +102,13 @@ export function createPlugin(baseDir: string) {
         description: "Show current workflow state and active initiatives",
         handler: async () => {
           const state = workflow.status();
-          const allInitiatives = fs.readdirSync(path.join(baseDir, 'initiatives'))
-            .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
-            .map(f => initiatives.read(f))
-            .filter(Boolean);
+          const initiativesDir = path.join(mdocsRoot, 'initiatives');
+          const allInitiatives = fs.existsSync(initiativesDir)
+            ? fs.readdirSync(initiativesDir)
+                .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
+                .map(f => initiatives.read(f))
+                .filter(Boolean)
+            : [];
           const activeInitiatives = allInitiatives.filter(i => i!.status === 'active');
           return {
             workflow: state,

@@ -28,6 +28,10 @@ export class WorkflowEngine {
   }
 
   private save(): void {
+    const dir = path.dirname(this.statePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     fs.writeFileSync(this.statePath, JSON.stringify(this.state, null, 2), 'utf8');
   }
 

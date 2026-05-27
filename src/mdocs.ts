@@ -31,12 +31,14 @@ export class MdocsManager {
   exists(): boolean {
     const initiativesPath = path.join(this.baseDir, 'initiatives');
     const wikiPath = path.join(this.baseDir, 'wiki');
+    const initiativesIndex = path.join(initiativesPath, 'INDEX.md');
+    const wikiIndex = path.join(wikiPath, 'INDEX.md');
 
-    if (!fs.existsSync(initiativesPath) || !fs.existsSync(wikiPath)) {
-      return false;
-    }
-
-    return fs.statSync(initiativesPath).isDirectory() &&
+    return fs.existsSync(initiativesPath) &&
+           fs.existsSync(wikiPath) &&
+           fs.existsSync(initiativesIndex) &&
+           fs.existsSync(wikiIndex) &&
+           fs.statSync(initiativesPath).isDirectory() &&
            fs.statSync(wikiPath).isDirectory();
   }
 }
