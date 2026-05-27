@@ -90,17 +90,17 @@ export function createPlugin(baseDir: string) {
     },
 
     // Custom tools
-    tool: {
+    tools: {
       mdocs_init: {
         description: "Initialize /mdocs folder structure",
-        handler: async () => {
+        execute: async () => {
           mdocs.init();
           return { success: true };
         }
       },
       mdocs_status: {
         description: "Show current workflow state and active initiatives",
-        handler: async () => {
+        execute: async () => {
           const state = workflow.status();
           const initiativesDir = path.join(mdocsRoot, 'initiatives');
           const allInitiatives = fs.existsSync(initiativesDir)

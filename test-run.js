@@ -105,8 +105,8 @@ console.log(`   bash 'git commit' at COMPLETE: ${workflow2.canExecuteTool('bash'
 // Step 4: Test custom tools
 console.log('\n7. Testing custom tools...');
 (async () => {
-if (plugin.tool && plugin.tool.mdocs_status) {
-  const status = await plugin.tool.mdocs_status.handler();
+if (plugin.tools && plugin.tools.mdocs_status) {
+  const status = await plugin.tools.mdocs_status.execute();
   console.log(`   mdocs_status returned workflow step: ${status.workflow.currentStep}`);
   console.log(`   mdocs_status returned ${status.initiatives.length} active initiative(s)`);
 } else {
