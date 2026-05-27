@@ -1,7 +1,7 @@
 ---
 id: add-audit-log-and-event-history
 title: Add Audit Log and Event History
-status: active
+status: done
 created: 2026-05-27
 updated: 2026-05-27
 owner: system
@@ -61,5 +61,17 @@ Create a persistent audit trail of all significant actions (tool executions, wor
 - All tests pass; build succeeds
 
 ## Progress Log
+- [2026-05-27] Defined `AuditEvent` interface in `src/types.ts`
+- [2026-05-27] Created `src/audit.ts` with `AuditLog` class supporting append, query, summarize, and log rotation
+- [2026-05-27] Wired `tool.execute.after` and `event` hooks in `src/plugin.ts` to append audit events
+- [2026-05-27] Added `mdocs_audit` custom tool for querying the audit log
+- [2026-05-27] Created `src/__tests__/audit.test.ts` with 8 test cases
+- [2026-05-27] Updated README with audit log documentation
+- [2026-05-27] All tests pass (83/83); build succeeds; linter score 5/5
 
 ## Artifacts
+- `src/types.ts` — added `AuditEvent` interface
+- `src/audit.ts` — `AuditLog` class with NDJSON append/query/summarize and rotation
+- `src/plugin.ts` — audit wiring in hooks and `mdocs_audit` custom tool
+- `src/__tests__/audit.test.ts` — comprehensive test coverage
+- `README.md` — updated custom tools and notes sections

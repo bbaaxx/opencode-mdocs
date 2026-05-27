@@ -4,7 +4,7 @@
 - **Add mdocs Linter for Handoff Quality Gates** (done) — 2026-05-27 — [enhancement, quality, automation, linting]
 - **Add Initiative Priorities and Dependencies** (done) — 2026-05-27 — [enhancement, initiatives, scheduling]
 - **Add Full-Text Search Across Initiatives and Wiki** (done) — 2026-05-27 — [enhancement, search, discovery]
-- **Add Audit Log and Event History** (active) — 2026-05-27 — [enhancement, observability, history]
+- **Add Audit Log and Event History** (done) — 2026-05-27 — [enhancement, observability, history]
 - **Add Wiki Manager CRUD Operations** (done) — 2026-05-27 — [enhancement, wiki, api]
 - **Auto-Register Agent and Skills in Config Hook** (active) — 2026-05-27 — [enhancement, ux, config]
 - **Add mdocs_dispatch Custom Tool for Subagent Context Assembly** (done) — 2026-05-27 — [enhancement, subagent, orchestration]

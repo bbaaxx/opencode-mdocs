@@ -230,6 +230,7 @@ The plugin provides custom tools:
 - **`mdocs_status`** — Show current workflow state and active initiatives
 - **`mdocs_search`** — Search across initiatives and wiki by keyword
 - **`mdocs_dispatch`** — Assemble subagent context from an initiative and its related wiki entries
+- **`mdocs_audit`** — Query the audit log for events (filter by initiative, type, date)
 - **`mdocs_lint`** — Lint initiatives and wiki entries for handoff readiness
 
 ### Managing Initiatives
@@ -328,3 +329,4 @@ This project uses the mdocs workflow — all contributions should follow the 9-s
 - **Workflow is opt-in** — if no active initiative exists, all tools work normally
 - **State persists** — workflow state is saved to `/mdocs/.workflow-state.json`
 - **Initiatives are human-friendly** — file names include descriptive slugs and dates
+- **Audit log** — all tool calls and significant events are written to `/mdocs/audit.log` in NDJSON format; rotates automatically at 10MB

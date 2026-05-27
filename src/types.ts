@@ -85,3 +85,11 @@ export interface SearchOptions {
   dateFrom?: string;
   dateTo?: string;
 }
+
+export interface AuditEvent {
+  timestamp: string;
+  type: 'tool' | 'workflow' | 'initiative' | 'wiki';
+  initiativeId?: string;
+  step?: StepName;
+  details: Record<string, any>;
+}

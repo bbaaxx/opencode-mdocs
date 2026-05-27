@@ -7,6 +7,7 @@ import { WorkflowEngine } from './workflow';
 import { SubagentAssembler } from './subagent';
 import { MdocsLinter } from './linter';
 import { SearchEngine } from './search';
+import { AuditLog } from './audit';
 
 export function createPlugin(baseDir: string) {
   const mdocsRoot = path.join(baseDir, 'mdocs');
@@ -16,6 +17,7 @@ export function createPlugin(baseDir: string) {
     const workflow = new WorkflowEngine(mdocsRoot);
     const assembler = new SubagentAssembler();
     const search = new SearchEngine(mdocsRoot);
+    const audit = new AuditLog(mdocsRoot);
 
     return {
     // Config hook: initialize mdocs if not exists
@@ -53,15 +55,25 @@ export function createPlugin(baseDir: string) {
       }
     },
 
-    // Progress tracking: log tool calls to active initiative
+    // Progress tracking: log tool calls to active initiative and audit log
     "tool.execute.after": async (input: any, output: any) => {
       const step = workflow.getCurrentStep();
       const activeInitiativeId = workflow.status().activeInitiative;
+      const toolName = input.name || input.tool;
+
+      // Audit log every tool execution (comprehensive trail)
+      audit.append({
+        timestamp: new Date().toISOString(),
+        type: 'tool',
+        initiativeId: activeInitiativeId || undefined,
+        step,
+        details: { toolName, args: input.args || input.parameters || {} }
+      });
+
       if (step !== 'IDLE' && activeInitiativeId) {
         const fileName = `${activeInitiativeId}.md`;
         const initiative = initiatives.read(fileName);
         if (initiative) {
-          const toolName = input.name || input.tool;
           initiative.progressLog.push(`[${new Date().toISOString()}] ${toolName} executed at step ${step}`);
           initiative.updated = new Date().toISOString().split('T')[0];
           initiatives.update(fileName, initiative);
@@ -72,13 +84,24 @@ export function createPlugin(baseDir: string) {
     // Event logging: record significant workflow events
     "event": (input: any) => {
       const significantEvents = ['workflow.advance', 'initiative.create', 'wiki.create'];
-      if (significantEvents.includes(input.type)) {
-        const activeInitiativeId = workflow.status().activeInitiative;
+      const eventType = input.type;
+      const activeInitiativeId = workflow.status().activeInitiative;
+
+      // Audit log significant events
+      audit.append({
+        timestamp: new Date().toISOString(),
+        type: eventType.startsWith('workflow') ? 'workflow' : eventType.startsWith('initiative') ? 'initiative' : eventType.startsWith('wiki') ? 'wiki' : 'workflow',
+        initiativeId: activeInitiativeId || undefined,
+        step: workflow.getCurrentStep(),
+        details: { eventType }
+      });
+
+      if (significantEvents.includes(eventType)) {
         if (activeInitiativeId) {
           const fileName = `${activeInitiativeId}.md`;
           const initiative = initiatives.read(fileName);
           if (initiative) {
-            initiative.progressLog.push(`[${new Date().toISOString()}] Event: ${input.type}`);
+            initiative.progressLog.push(`[${new Date().toISOString()}] Event: ${eventType}`);
             initiative.updated = new Date().toISOString().split('T')[0];
             initiatives.update(fileName, initiative);
           }
@@ -187,6 +210,16 @@ export function createPlugin(baseDir: string) {
             step: currentStep,
             relatedWikiCount: wikiEntries.length
           };
+        }
+      },
+      mdocs_audit: {
+        description: "Query the audit log for events",
+        execute: async (args: { initiativeId?: string; limit?: number }) => {
+          const events = audit.query({
+            initiativeId: args.initiativeId,
+            limit: args.limit
+          });
+          return { events };
         }
       }
     }
