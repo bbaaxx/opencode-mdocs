@@ -12,7 +12,7 @@ describe('Types', () => {
       tags: ['test'],
       relatedWiki: ['wiki/test'],
       objective: 'Test objective',
-      plan: ['Step 1'],
+      plan: [{ description: 'Step 1', status: 'pending' }],
       progressLog: [],
       artifacts: []
     };

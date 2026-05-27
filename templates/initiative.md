@@ -2,6 +2,7 @@
 id: {{id}}
 title: {{title}}
 status: active
+priority: medium
 created: {{created}}
 updated: {{updated}}
 owner: {{owner}}
@@ -13,7 +14,9 @@ related_wiki: {{related_wiki}}
 {{objective}}
 
 ## Plan
-{{plan}}
+- [ ] Step 1: Description
+- [/] Step 2: In progress
+- [x] Step 3: Completed
 
 ## Progress Log
 

@@ -1,4 +1,14 @@
-# opencode-mdocs Plugin Design Spec
+---
+id: plugin-design-spec
+title: Original Plugin Design Spec
+category: architecture
+created: 2026-05-27
+updated: 2026-05-27
+related_initiatives: [install-mdocs]
+tags: [blueprint, architecture, design, history]
+---
+
+> **Historical Note:** This document is the original design specification created *before* the plugin was implemented. It served as the blueprint for building opencode-mdocs. Some details may differ from the final implementation.
 
 ## Overview
 

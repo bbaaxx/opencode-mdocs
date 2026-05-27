@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Initiative } from './types';
+import { Initiative, PlanItem, PlanItemStatus } from './types';
 
 function parseSection(content: string, sectionName: string): string {
   const escaped = sectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -11,6 +11,40 @@ function parseSection(content: string, sectionName: string): string {
 function parseListSection(content: string, sectionName: string): string[] {
   const section = parseSection(content, sectionName);
   return section.split('\n').filter(line => line.trim().startsWith('- ')).map(line => line.replace(/^- /, '').trim());
+}
+
+function formatPlanItem(item: { description: string; status: string }): string {
+  const statusMap: Record<string, string> = {
+    'pending': '- [ ]',
+    'in-progress': '- [/]',
+    'done': '- [x]'
+  };
+  const prefix = statusMap[item.status] || '- [ ]';
+  return `${prefix} ${item.description}`;
+}
+
+function parsePlanItem(line: string): { description: string; status: PlanItemStatus } {
+  // Match checkable items: - [ ] desc, - [/] desc, - [x] desc
+  const checkableMatch = line.match(/^- \[([ x/])\]\s*(.+)$/);
+  if (checkableMatch) {
+    const mark = checkableMatch[1];
+    const description = checkableMatch[2].trim();
+    const status: PlanItemStatus = mark === 'x' ? 'done' : mark === '/' ? 'in-progress' : 'pending';
+    return { description, status };
+  }
+  // Backward compatibility: plain list item - Description
+  const plainMatch = line.match(/^- \s*(.+)$/);
+  if (plainMatch) {
+    return { description: plainMatch[1].trim(), status: 'pending' };
+  }
+  return { description: line.trim(), status: 'pending' };
+}
+
+function parsePlanSection(content: string): { description: string; status: PlanItemStatus }[] {
+  const section = parseSection(content, 'Plan');
+  return section.split('\n')
+    .filter(line => line.trim().startsWith('- '))
+    .map(line => parsePlanItem(line));
 }
 
 export class InitiativeManager {
@@ -40,7 +74,7 @@ export class InitiativeManager {
 
   private toFrontmatter(initiative: Initiative): string {
     // Note: YAML frontmatter uses snake_case
-    const front = {
+    const front: Record<string, any> = {
       id: initiative.id,
       title: initiative.title,
       status: initiative.status,
@@ -50,6 +84,15 @@ export class InitiativeManager {
       tags: initiative.tags,
       related_wiki: initiative.relatedWiki,
     };
+    if (initiative.priority) {
+      front.priority = initiative.priority;
+    }
+    if (initiative.dueDate) {
+      front.due_date = initiative.dueDate;
+    }
+    if (initiative.dependsOn && initiative.dependsOn.length > 0) {
+      front.depends_on = initiative.dependsOn;
+    }
     return `---\n${Object.entries(front).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n\n`;
   }
 
@@ -63,7 +106,7 @@ export class InitiativeManager {
 
     const content = this.toFrontmatter(initiative) +
       `## Objective\n${initiative.objective}\n\n` +
-      `## Plan\n${initiative.plan.map(p => `- ${p}`).join('\n')}\n\n` +
+      `## Plan\n${initiative.plan.map(p => formatPlanItem(p)).join('\n')}\n\n` +
       `## Progress Log\n${initiative.progressLog.map(l => `- ${l}`).join('\n')}\n\n` +
       `## Artifacts\n${initiative.artifacts.map(a => `- ${a}`).join('\n')}`;
 
@@ -105,6 +148,7 @@ export class InitiativeManager {
       id: front.id || '',
       title: front.title || '',
       status: front.status || 'active',
+      priority: front.priority || 'medium',
       created: front.created || '',
       updated: front.updated || '',
       owner: front.owner || '',
@@ -112,9 +156,11 @@ export class InitiativeManager {
       relatedWiki: Array.isArray(front.related_wiki) ? front.related_wiki : [],
       // Parse markdown sections
       objective: parseSection(body, 'Objective'),
-      plan: parseListSection(body, 'Plan'),
+      plan: parsePlanSection(body),
       progressLog: parseListSection(body, 'Progress Log'),
-      artifacts: parseListSection(body, 'Artifacts')
+      artifacts: parseListSection(body, 'Artifacts'),
+      dueDate: front.due_date || undefined,
+      dependsOn: Array.isArray(front.depends_on) ? front.depends_on : undefined
     };
   }
 
@@ -137,7 +183,7 @@ export class InitiativeManager {
     // Write the file (will overwrite if same name, which is expected for updates)
     const content = this.toFrontmatter(initiative) +
       `## Objective\n${initiative.objective}\n\n` +
-      `## Plan\n${initiative.plan.map(p => `- ${p}`).join('\n')}\n\n` +
+      `## Plan\n${initiative.plan.map(p => formatPlanItem(p)).join('\n')}\n\n` +
       `## Progress Log\n${initiative.progressLog.map(l => `- ${l}`).join('\n')}\n\n` +
       `## Artifacts\n${initiative.artifacts.map(a => `- ${a}`).join('\n')}`;
 
@@ -155,6 +201,11 @@ export class InitiativeManager {
     }
   }
 
+  findById(id: string): Initiative | null {
+    const all = this.listAll();
+    return all.find(i => i.id === id) || null;
+  }
+
   findRelated(queryTags: string[]): Initiative[] {
     const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
     const initiatives: Initiative[] = [];
@@ -167,6 +218,58 @@ export class InitiativeManager {
       }
     }
     return initiatives.filter(i => i.tags.some(t => queryTags.includes(t)));
+  }
+
+  findBlocked(): Initiative[] {
+    const all = this.listAll();
+    return all.filter(i => {
+      if (!i.dependsOn || i.dependsOn.length === 0) return false;
+      return i.dependsOn.some(depId => {
+        const dep = all.find(d => d.id === depId);
+        return dep && dep.status !== 'done';
+      });
+    });
+  }
+
+  findOverdue(): Initiative[] {
+    const today = new Date().toISOString().split('T')[0];
+    return this.listAll().filter(i => {
+      if (!i.dueDate || i.status === 'done') return false;
+      return i.dueDate < today;
+    });
+  }
+
+  listByPriority(): Initiative[] {
+    const priorityOrder: Record<string, number> = {
+      'critical': 0,
+      'high': 1,
+      'medium': 2,
+      'low': 3
+    };
+    return this.listAll().sort((a, b) => {
+      const priA = priorityOrder[a.priority || 'medium'] ?? 2;
+      const priB = priorityOrder[b.priority || 'medium'] ?? 2;
+      if (priA !== priB) return priA - priB;
+      // If same priority, sort by due date (earliest first)
+      if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return 0;
+    });
+  }
+
+  private listAll(): Initiative[] {
+    const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+    const initiatives: Initiative[] = [];
+    for (const f of files) {
+      try {
+        const init = this.read(f);
+        if (init) initiatives.push(init);
+      } catch {
+        // Skip malformed files
+      }
+    }
+    return initiatives;
   }
 
   private updateIndex(): void {

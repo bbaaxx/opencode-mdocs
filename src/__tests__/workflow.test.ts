@@ -99,11 +99,11 @@ describe('WorkflowEngine', () => {
     expect(engine.canExecuteTool('bash', { command: 'git commit -m "msg"' })).toBe(true);
   });
 
-  test('allows write/edit on mdocs paths regardless of step', () => {
+  test('allows write/edit on absolute mdocs paths regardless of step', () => {
     const engine = new WorkflowEngine(testDir);
     engine.advance('UNDERSTAND');
     
-    // These should be allowed even at UNDERSTAND because they target mdocs
+    // Absolute paths with /mdocs/
     expect(engine.canExecuteTool('write', { filePath: '/project/mdocs/initiatives/test.md' })).toBe(true);
     expect(engine.canExecuteTool('edit', { filePath: '/project/mdocs/wiki/entry.md' })).toBe(true);
     expect(engine.canExecuteTool('write', { filePath: '/project/mdocs/.workflow-state.json' })).toBe(true);
@@ -111,6 +111,18 @@ describe('WorkflowEngine', () => {
     // But non-mdocs paths should still be blocked
     expect(engine.canExecuteTool('write', { filePath: '/project/src/index.ts' })).toBe(false);
     expect(engine.canExecuteTool('edit', { filePath: '/project/README.md' })).toBe(false);
+  });
+
+  test('allows write/edit on relative mdocs paths regardless of step', () => {
+    const engine = new WorkflowEngine(testDir);
+    engine.advance('UNDERSTAND');
+    
+    // Relative paths starting with mdocs/
+    expect(engine.canExecuteTool('write', { filePath: 'mdocs/initiatives/test.md' })).toBe(true);
+    expect(engine.canExecuteTool('edit', { filePath: 'mdocs/wiki/entry.md' })).toBe(true);
+    
+    // Non-mdocs relative paths should be blocked
+    expect(engine.canExecuteTool('write', { filePath: 'src/index.ts' })).toBe(false);
   });
 
   test('allows read on mdocs paths regardless of step', () => {

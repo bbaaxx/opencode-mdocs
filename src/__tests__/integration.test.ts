@@ -36,7 +36,7 @@ describe('Integration', () => {
       tags: ['test'],
       relatedWiki: [],
       objective: 'Test the full workflow',
-      plan: ['Step 1', 'Step 2'],
+      plan: [{ description: 'Step 1', status: 'pending' }, { description: 'Step 2', status: 'pending' }],
       progressLog: [],
       artifacts: []
     };

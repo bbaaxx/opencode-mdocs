@@ -8,7 +8,15 @@ export class SubagentAssembler {
       initiative.objective,
       ``,
       `## Plan`,
-      ...initiative.plan.map(p => `- ${p}`),
+      ...initiative.plan.map(p => {
+        const statusMap: Record<string, string> = {
+          'pending': '- [ ]',
+          'in-progress': '- [/]',
+          'done': '- [x]'
+        };
+        const prefix = statusMap[p.status] || '- [ ]';
+        return `${prefix} ${p.description}`;
+      }),
       ``,
       `## Context`,
       ...wikiEntries.map(e => `### ${e.title}\n${e.content}`),

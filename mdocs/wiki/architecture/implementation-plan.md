@@ -1,3 +1,15 @@
+---
+id: implementation-plan
+title: Original Implementation Plan
+category: architecture
+created: 2026-05-27
+updated: 2026-05-27
+related_initiatives: [install-mdocs]
+tags: [blueprint, plan, implementation, history]
+---
+
+> **Historical Note:** This document is the original implementation plan created *before* the plugin was built. It served as the step-by-step guide for building opencode-mdocs. Some details may differ from the final implementation.
+
 # opencode-mdocs Plugin Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -314,6 +326,8 @@ git commit -m "feat: add MdocsManager for directory initialization"
 
 **Step 1:** Write failing test
 
+Create `src/__tests__/initiative.test.ts`:
+
 ```typescript
 import { InitiativeManager } from '../initiative';
 import * as fs from 'fs';
@@ -481,6 +495,8 @@ git commit -m "feat: add InitiativeManager with CRUD and search"
 
 **Step 1:** Write failing test
 
+Create `src/__tests__/wiki.test.ts`:
+
 ```typescript
 import { WikiManager } from '../wiki';
 import * as fs from 'fs';
@@ -601,6 +617,8 @@ git commit -m "feat: add WikiManager with category indices"
 - Test: `src/__tests__/workflow.test.ts`
 
 **Step 1:** Write failing test
+
+Create `src/__tests__/workflow.test.ts`:
 
 ```typescript
 import { WorkflowEngine } from '../workflow';
@@ -725,6 +743,8 @@ git commit -m "feat: add WorkflowEngine state machine with gate enforcement"
 - Test: `src/__tests__/subagent.test.ts`
 
 **Step 1:** Write failing test
+
+Create `src/__tests__/subagent.test.ts`:
 
 ```typescript
 import { SubagentAssembler } from '../subagent';

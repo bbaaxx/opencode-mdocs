@@ -13,32 +13,62 @@ This plugin brings structure to AI-assisted development by:
 
 ## Installation
 
+### For Local Development (Dogfooding)
+
+When working on the plugin itself, opencode loads it directly from the built output:
+
 ```bash
-npm install -g opencode-mdocs
+npm install
+npm run build
 ```
 
-Or in your project:
+Create `opencode.json` in the project root:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["./dist/index.js"],
+  "default_agent": "mdocs-orchestrator",
+  "skills": {
+    "paths": ["./skills"]
+  }
+}
+```
+
+Copy the agent file to where opencode auto-discovers project agents:
+
+```bash
+mkdir -p .opencode/agents
+cp agents/mdocs-orchestrator.md .opencode/agents/
+```
+
+### For Consumers (after npm publish)
 
 ```bash
 npm install --save-dev opencode-mdocs
 ```
 
-## Configuration
-
-Add to your `opencode.json`:
+In your project's `opencode.json`:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": ["opencode-mdocs"],
+  "default_agent": "mdocs-orchestrator",
   "skills": {
     "paths": ["node_modules/opencode-mdocs/skills"]
-  },
-  "agent": {
-    "mdocs-orchestrator": "node_modules/opencode-mdocs/agents/mdocs-orchestrator.md"
   }
 }
 ```
+
+Then copy the agent from the package to your `.opencode/agents/` directory:
+
+```bash
+mkdir -p .opencode/agents
+cp node_modules/opencode-mdocs/agents/mdocs-orchestrator.md .opencode/agents/
+```
+
+> **Why copy the agent?** opencode discovers agent files in `.opencode/agents/` or `.opencode/agent/` automatically. Referencing file paths directly inside `opencode.json`'s `agent` field is not supported — agent values must be inline objects or discovered from the standard directory.
 
 ## First Run
 
@@ -111,9 +141,9 @@ related_wiki: [architecture/auth-design]
 Add JWT-based authentication to the API.
 
 ## Plan
-- Research auth libraries
-- Implement middleware
-- Add tests
+- [ ] Research auth libraries
+- [/] Implement middleware
+- [x] Add tests
 
 ## Progress Log
 - [2025-05-24] Created initiative
@@ -124,6 +154,11 @@ Add JWT-based authentication to the API.
 ```
 
 **Status values:** `active` | `paused` | `done`
+
+**Plan items** support checkable status markers:
+- `- [ ] Task name` — pending
+- `- [/] Task name` — in-progress
+- `- [x] Task name` — done
 
 ### Wiki
 
@@ -189,10 +224,13 @@ The agent will:
 
 ### Custom Tools
 
-The plugin provides two custom tools:
+The plugin provides custom tools:
 
 - **`mdocs_init`** — Manually initialize the `/mdocs` structure
 - **`mdocs_status`** — Show current workflow state and active initiatives
+- **`mdocs_search`** — Search across initiatives and wiki by keyword
+- **`mdocs_dispatch`** — Assemble subagent context from an initiative and its related wiki entries
+- **`mdocs_lint`** — Lint initiatives and wiki entries for handoff readiness
 
 ### Managing Initiatives
 

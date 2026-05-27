@@ -6,3 +6,6 @@ node_modules/
 .vscode/
 coverage/
 *.tsbuildinfo
+
+# Runtime workflow state — regenerated on each session
+mdocs/.workflow-state.json

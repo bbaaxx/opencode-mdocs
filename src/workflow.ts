@@ -62,25 +62,36 @@ export class WorkflowEngine {
     // Check if any path argument references the mdocs directory
     const args = toolArgs || {};
     
-    // Direct file paths
-    if (args.filePath && typeof args.filePath === 'string') {
-      return args.filePath.includes('/mdocs/') || args.filePath.includes('\\mdocs\\');
+    const isMdocsPath = (p: string): boolean => {
+      // Match both absolute (/mdocs/) and relative (mdocs/) paths
+      // Also handle Windows paths (\mdocs\)
+      return p.includes('/mdocs/') || 
+             p.includes('\\mdocs\\') || 
+             p.startsWith('mdocs/') || 
+             p.startsWith('mdocs\\');
+    };
+    
+    // Direct file paths (read, write, edit tools)
+    if (args.filePath && typeof args.filePath === 'string' && isMdocsPath(args.filePath)) {
+      return true;
     }
     
-    // Path parameter for glob/grep
-    if (args.path && typeof args.path === 'string') {
-      return args.path.includes('/mdocs/') || args.path.includes('\\mdocs\\');
+    // Path parameter (glob, grep, list tools)
+    if (args.path && typeof args.path === 'string' && isMdocsPath(args.path)) {
+      return true;
     }
     
-    // Pattern that includes mdocs
-    if (args.pattern && typeof args.pattern === 'string') {
-      return args.pattern.includes('/mdocs/') || args.pattern.includes('\\mdocs\\') || args.pattern.includes('mdocs');
+    // Pattern parameter (glob, grep tools)
+    if (args.pattern && typeof args.pattern === 'string' && isMdocsPath(args.pattern)) {
+      return true;
     }
     
     // Bash commands operating on mdocs
     if (toolName === 'bash') {
       const command = args.command || args.args?.command || '';
-      return command.includes('/mdocs/') || command.includes('\\mdocs\\');
+      if (typeof command === 'string' && isMdocsPath(command)) {
+        return true;
+      }
     }
     
     return false;

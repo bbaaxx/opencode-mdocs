@@ -5,16 +5,19 @@ import { InitiativeManager } from './initiative';
 import { WikiManager } from './wiki';
 import { WorkflowEngine } from './workflow';
 import { SubagentAssembler } from './subagent';
+import { MdocsLinter } from './linter';
+import { SearchEngine } from './search';
 
 export function createPlugin(baseDir: string) {
   const mdocsRoot = path.join(baseDir, 'mdocs');
   const mdocs = new MdocsManager(mdocsRoot);
   const initiatives = new InitiativeManager(mdocsRoot);
   const wiki = new WikiManager(mdocsRoot);
-  const workflow = new WorkflowEngine(mdocsRoot);
-  const assembler = new SubagentAssembler();
+    const workflow = new WorkflowEngine(mdocsRoot);
+    const assembler = new SubagentAssembler();
+    const search = new SearchEngine(mdocsRoot);
 
-  return {
+    return {
     // Config hook: initialize mdocs if not exists
     config: (cfg: any) => {
       if (!mdocs.exists()) {
@@ -30,7 +33,11 @@ export function createPlugin(baseDir: string) {
           tags: ['setup', 'plugin'],
           relatedWiki: [],
           objective: 'Install and configure the opencode-mdocs plugin',
-          plan: ['Install npm package', 'Configure opencode.json', 'Verify workflow'],
+          plan: [
+            { description: 'Install npm package', status: 'pending' },
+            { description: 'Configure opencode.json', status: 'pending' },
+            { description: 'Verify workflow', status: 'pending' }
+          ],
           progressLog: ['Plugin installed'],
           artifacts: []
         });
@@ -110,6 +117,8 @@ export function createPlugin(baseDir: string) {
                 .filter(Boolean)
             : [];
           const activeInitiatives = allInitiatives.filter(i => i!.status === 'active');
+          const blocked = initiatives.findBlocked();
+          const overdue = initiatives.findOverdue();
           return {
             workflow: state,
             initiatives: activeInitiatives.map(i => ({
@@ -117,7 +126,66 @@ export function createPlugin(baseDir: string) {
               title: i!.title,
               status: i!.status,
               created: i!.created
+            })),
+            blocked: blocked.map(i => ({
+              id: i.id,
+              title: i.title,
+              dependsOn: i.dependsOn || []
+            })),
+            overdue: overdue.map(i => ({
+              id: i.id,
+              title: i.title,
+              dueDate: i.dueDate
             }))
+          };
+        }
+      },
+      mdocs_search: {
+        description: "Search across initiatives and wiki by keyword",
+        execute: async (args: { query: string; filters?: { tags?: string[]; status?: string; category?: string; dateFrom?: string; dateTo?: string } }) => {
+          const results = search.query(args.query, args.filters || {});
+          return {
+            results: results.map(r => ({
+              type: r.type,
+              id: r.id,
+              title: r.title,
+              score: r.score
+            }))
+          };
+        }
+      },
+      mdocs_dispatch: {
+        description: "Assemble subagent context from an initiative and its related wiki entries",
+        execute: async (args: { initiativeId?: string }) => {
+          const initiativeId = args.initiativeId || workflow.status().activeInitiative;
+          if (!initiativeId) {
+            return { error: 'No initiativeId provided and no active initiative' };
+          }
+
+          const initiative = initiatives.findById(initiativeId);
+          if (!initiative) {
+            return { error: 'Initiative not found' };
+          }
+
+          const wikiEntries: any[] = [];
+          for (const wikiRef of initiative.relatedWiki) {
+            const [category, id] = wikiRef.split('/');
+            if (category && id) {
+              const entry = wiki.read(category, id);
+              if (entry) {
+                wikiEntries.push(entry);
+              }
+            }
+          }
+
+          const currentStep = workflow.getCurrentStep();
+          const context = assembler.assemble(initiative, wikiEntries, currentStep);
+
+          return {
+            context,
+            initiativeId: initiative.id,
+            step: currentStep,
+            relatedWikiCount: wikiEntries.length
           };
         }
       }

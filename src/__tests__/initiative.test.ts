@@ -31,7 +31,7 @@ describe('InitiativeManager', () => {
       tags: ['test'],
       relatedWiki: [],
       objective: 'Test objective',
-      plan: ['Step 1'],
+      plan: [{ description: 'Step 1', status: 'pending' }],
       progressLog: [],
       artifacts: []
     };
@@ -48,7 +48,7 @@ describe('InitiativeManager', () => {
     expect(fileContent).toContain('title: "Test Initiative"');
     expect(fileContent).toContain('## Objective');
     expect(fileContent).toContain('## Plan');
-    expect(fileContent).toContain('- Step 1');
+    expect(fileContent).toContain('- [ ] Step 1');
   });
 
   test('read initiative parses frontmatter and sections', () => {
@@ -63,7 +63,7 @@ describe('InitiativeManager', () => {
       tags: ['test'],
       relatedWiki: ['wiki/test'],
       objective: 'Test objective',
-      plan: ['Step 1', 'Step 2'],
+      plan: [{ description: 'Step 1', status: 'pending' }, { description: 'Step 2', status: 'pending' }],
       progressLog: ['Started'],
       artifacts: ['wiki/test']
     };
@@ -76,7 +76,10 @@ describe('InitiativeManager', () => {
     expect(read!.title).toBe('Test Initiative');
     expect(read!.relatedWiki).toEqual(['wiki/test']);
     expect(read!.objective).toBe('Test objective');
-    expect(read!.plan).toEqual(['Step 1', 'Step 2']);
+    expect(read!.plan).toEqual([
+      { description: 'Step 1', status: 'pending' },
+      { description: 'Step 2', status: 'pending' }
+    ]);
     expect(read!.progressLog).toEqual(['Started']);
     expect(read!.status).toBe('active');
     expect(read!.created).toBe('2025-05-24');
@@ -120,7 +123,7 @@ describe('InitiativeManager', () => {
       tags: ['test'],
       relatedWiki: [],
       objective: 'Original',
-      plan: ['Step 1'],
+      plan: [{ description: 'Step 1', status: 'pending' }],
       progressLog: [],
       artifacts: []
     };
@@ -255,5 +258,109 @@ describe('InitiativeManager', () => {
 
     manager.create(initiative);
     expect(() => manager.create(initiative)).toThrow('already exists');
+  });
+
+  test('create with priority, dueDate, and dependsOn', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiative: Initiative = {
+      id: 'priority-test',
+      title: 'Priority Test',
+      status: 'active',
+      priority: 'high',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      owner: 'test',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Test priority fields',
+      plan: [],
+      progressLog: [],
+      artifacts: [],
+      dueDate: '2025-06-01',
+      dependsOn: ['dep1', 'dep2']
+    };
+
+    manager.create(initiative);
+    const read = manager.read('priority-test--2025-05-24.md');
+    expect(read).not.toBeNull();
+    expect(read!.priority).toBe('high');
+    expect(read!.dueDate).toBe('2025-06-01');
+    expect(read!.dependsOn).toEqual(['dep1', 'dep2']);
+  });
+
+  test('read defaults priority to medium when not specified', () => {
+    const manager = new InitiativeManager(testDir);
+    const content = `---
+id: no-priority
+title: No Priority
+status: active
+created: 2025-05-24
+updated: 2025-05-24
+owner: test
+tags: []
+related_wiki: []
+---
+
+## Objective
+No priority
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`;
+    fs.writeFileSync(path.join(testDir, 'initiatives', 'no-priority--2025-05-24.md'), content, 'utf8');
+    const read = manager.read('no-priority--2025-05-24.md');
+    expect(read).not.toBeNull();
+    expect(read!.priority).toBe('medium');
+  });
+
+  test('findBlocked returns initiatives with undone dependencies', () => {
+    const manager = new InitiativeManager(testDir);
+    const dep1: Initiative = { id: 'dep1', title: 'Dependency 1', status: 'active', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Dep1', plan: [], progressLog: [], artifacts: [] };
+    const dep2: Initiative = { id: 'dep2', title: 'Dependency 2', status: 'done', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Dep2', plan: [], progressLog: [], artifacts: [] };
+    const blocked: Initiative = { id: 'blocked', title: 'Blocked', status: 'active', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Blocked', plan: [], progressLog: [], artifacts: [], dependsOn: ['dep1', 'dep2'] };
+    const unblocked: Initiative = { id: 'unblocked', title: 'Unblocked', status: 'active', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Unblocked', plan: [], progressLog: [], artifacts: [], dependsOn: ['dep2'] };
+
+    manager.create(dep1);
+    manager.create(dep2);
+    manager.create(blocked);
+    manager.create(unblocked);
+
+    const blockedList = manager.findBlocked();
+    expect(blockedList).toHaveLength(1);
+    expect(blockedList[0].id).toBe('blocked');
+  });
+
+  test('findOverdue returns initiatives past due date', () => {
+    const manager = new InitiativeManager(testDir);
+    const pastDue: Initiative = { id: 'past', title: 'Past Due', status: 'active', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Past', plan: [], progressLog: [], artifacts: [], dueDate: '2020-01-01' };
+    const futureDue: Initiative = { id: 'future', title: 'Future Due', status: 'active', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Future', plan: [], progressLog: [], artifacts: [], dueDate: '2099-12-31' };
+    const done: Initiative = { id: 'done', title: 'Done', status: 'done', priority: 'medium', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Done', plan: [], progressLog: [], artifacts: [], dueDate: '2020-01-01' };
+
+    manager.create(pastDue);
+    manager.create(futureDue);
+    manager.create(done);
+
+    const overdue = manager.findOverdue();
+    expect(overdue).toHaveLength(1);
+    expect(overdue[0].id).toBe('past');
+  });
+
+  test('listByPriority sorts by priority then due date', () => {
+    const manager = new InitiativeManager(testDir);
+    const low: Initiative = { id: 'low', title: 'Low', status: 'active', priority: 'low', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Low', plan: [], progressLog: [], artifacts: [] };
+    const critical: Initiative = { id: 'critical', title: 'Critical', status: 'active', priority: 'critical', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Critical', plan: [], progressLog: [], artifacts: [], dueDate: '2025-06-15' };
+    const high: Initiative = { id: 'high', title: 'High', status: 'active', priority: 'high', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'High', plan: [], progressLog: [], artifacts: [], dueDate: '2025-06-01' };
+    const criticalLater: Initiative = { id: 'critical-later', title: 'Critical Later', status: 'active', priority: 'critical', created: '2025-05-24', updated: '2025-05-24', owner: 'a', tags: [], relatedWiki: [], objective: 'Critical Later', plan: [], progressLog: [], artifacts: [], dueDate: '2025-06-30' };
+
+    manager.create(low);
+    manager.create(critical);
+    manager.create(high);
+    manager.create(criticalLater);
+
+    const sorted = manager.listByPriority();
+    expect(sorted.map(i => i.id)).toEqual(['critical', 'critical-later', 'high', 'low']);
   });
 });

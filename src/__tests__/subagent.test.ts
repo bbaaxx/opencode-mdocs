@@ -8,7 +8,7 @@ describe('SubagentAssembler', () => {
       id: 'test', title: 'Test', status: 'active',
       created: '2025-05-24', updated: '2025-05-24', owner: 'a',
       tags: [], relatedWiki: [], objective: 'Build auth',
-      plan: ['Step 1', 'Step 2'], progressLog: [], artifacts: []
+      plan: [{ description: 'Step 1', status: 'pending' }, { description: 'Step 2', status: 'pending' }], progressLog: [], artifacts: []
     };
     const wiki: WikiEntry[] = [{
       id: 'decision', title: 'Decision', category: 'decisions',
@@ -30,7 +30,7 @@ describe('SubagentAssembler', () => {
       id: 'test', title: 'Test', status: 'active',
       created: '2025-05-24', updated: '2025-05-24', owner: 'a',
       tags: [], relatedWiki: [], objective: 'Build auth',
-      plan: ['Step 1'], progressLog: [], artifacts: []
+      plan: [{ description: 'Step 1', status: 'pending' }], progressLog: [], artifacts: []
     };
 
     const context = assembler.assemble(initiative, [], 'PLAN');
