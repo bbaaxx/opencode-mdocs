@@ -1,7 +1,7 @@
 ---
 id: auto-register-agent-and-skills
 title: Auto-Register Agent and Skills in Config Hook
-status: active
+status: done
 created: 2026-05-27
 updated: 2026-05-27
 owner: system
@@ -49,5 +49,15 @@ The exact opencode config hook API is not fully documented in this repo. The `cf
 - All tests pass; build succeeds
 
 ## Progress Log
+- [2026-05-27] Updated `config` hook in `src/plugin.ts` to auto-register agent and skills
+- [2026-05-27] Added defensive path resolution for both local (`src/`) and built (`dist/`) contexts
+- [2026-05-27] Added deduplication logic to prevent duplicate registrations
+- [2026-05-27] Added graceful error handling (never throws)
+- [2026-05-27] Added 5 config hook tests in `src/__tests__/plugin.test.ts`
+- [2026-05-27] Updated README: removed manual agent copy, simplified to one-line plugin config
+- [2026-05-27] All tests pass (88/88); build succeeds; linter score 5/5
 
 ## Artifacts
+- `src/plugin.ts` — auto-registration logic in `config` hook
+- `src/__tests__/plugin.test.ts` — config hook tests
+- `README.md` — simplified installation instructions

@@ -222,3 +222,70 @@ The active one
     expect(result.error).toBe('No initiativeId provided and no active initiative');
   });
 });
+
+describe('Config Hook', () => {
+  beforeEach(() => {
+    if (fs.existsSync(testDir)) {
+      fs.rmSync(testDir, { recursive: true });
+    }
+  });
+
+  afterEach(() => {
+    if (fs.existsSync(testDir)) {
+      fs.rmSync(testDir, { recursive: true });
+    }
+  });
+
+  test('auto-registers agent and skills on empty config', () => {
+    const plugin = createPlugin(testDir);
+    const cfg: any = {};
+    plugin.config(cfg);
+
+    expect(cfg.agents).toBeDefined();
+    expect(cfg.agents.length).toBeGreaterThan(0);
+    expect(cfg.agents.some((a: any) => a.name === 'mdocs-orchestrator')).toBe(true);
+
+    expect(cfg.skills).toBeDefined();
+    expect(cfg.skills.paths).toBeDefined();
+    expect(cfg.skills.paths.length).toBeGreaterThan(0);
+  });
+
+  test('does not duplicate agent if already registered', () => {
+    const plugin = createPlugin(testDir);
+    const cfg: any = {
+      agents: [{ name: 'mdocs-orchestrator', path: '/some/path' }]
+    };
+    plugin.config(cfg);
+
+    expect(cfg.agents.length).toBe(1);
+  });
+
+  test('does not duplicate skills path if already present', () => {
+    const plugin = createPlugin(testDir);
+    const cfg: any = {
+      skills: { paths: ['/path/to/opencode-mdocs/skills'] }
+    };
+    plugin.config(cfg);
+
+    expect(cfg.skills.paths.length).toBe(1);
+  });
+
+  test('appends skills path to existing skills config', () => {
+    const plugin = createPlugin(testDir);
+    const cfg: any = {
+      skills: { paths: ['/other/skills'] }
+    };
+    plugin.config(cfg);
+
+    expect(cfg.skills.paths.length).toBe(2);
+    expect(cfg.skills.paths.some((p: string) => p.includes('opencode-mdocs'))).toBe(true);
+  });
+
+  test('gracefully handles config mutation errors', () => {
+    const plugin = createPlugin(testDir);
+    const cfg: any = Object.create(null);
+    cfg.skills = Object.create(null);
+    // This should not throw
+    expect(() => plugin.config(cfg)).not.toThrow();
+  });
+});

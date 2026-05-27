@@ -27,20 +27,11 @@ Create `opencode.json` in the project root:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["./dist/index.js"],
-  "default_agent": "mdocs-orchestrator",
-  "skills": {
-    "paths": ["./skills"]
-  }
+  "plugin": ["./dist/index.js"]
 }
 ```
 
-Copy the agent file to where opencode auto-discovers project agents:
-
-```bash
-mkdir -p .opencode/agents
-cp agents/mdocs-orchestrator.md .opencode/agents/
-```
+The plugin automatically registers the `mdocs-orchestrator` agent and skills directory on load.
 
 ### For Consumers (after npm publish)
 
@@ -53,22 +44,11 @@ In your project's `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-mdocs"],
-  "default_agent": "mdocs-orchestrator",
-  "skills": {
-    "paths": ["node_modules/opencode-mdocs/skills"]
-  }
+  "plugin": ["opencode-mdocs"]
 }
 ```
 
-Then copy the agent from the package to your `.opencode/agents/` directory:
-
-```bash
-mkdir -p .opencode/agents
-cp node_modules/opencode-mdocs/agents/mdocs-orchestrator.md .opencode/agents/
-```
-
-> **Why copy the agent?** opencode discovers agent files in `.opencode/agents/` or `.opencode/agent/` automatically. Referencing file paths directly inside `opencode.json`'s `agent` field is not supported — agent values must be inline objects or discovered from the standard directory.
+That's it — the plugin auto-registers the agent and skills paths on startup.
 
 ## First Run
 

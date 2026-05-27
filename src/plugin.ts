@@ -20,8 +20,39 @@ export function createPlugin(baseDir: string) {
     const audit = new AuditLog(mdocsRoot);
 
     return {
-    // Config hook: initialize mdocs if not exists
+    // Config hook: initialize mdocs and auto-register agent/skills
     config: (cfg: any) => {
+      try {
+        // Auto-register mdocs-orchestrator agent
+        const agentPath = path.resolve(__dirname, '../agents/mdocs-orchestrator.md');
+        if (fs.existsSync(agentPath)) {
+          if (!cfg.agents) cfg.agents = [];
+          if (!Array.isArray(cfg.agents)) cfg.agents = [cfg.agents];
+          const alreadyRegistered = cfg.agents.some((a: any) =>
+            (typeof a === 'string' && a.includes('mdocs-orchestrator')) ||
+            (a && a.name === 'mdocs-orchestrator')
+          );
+          if (!alreadyRegistered) {
+            cfg.agents.push({ name: 'mdocs-orchestrator', path: agentPath });
+          }
+        }
+
+        // Auto-register skills directory
+        const skillsPath = path.resolve(__dirname, '../skills');
+        if (fs.existsSync(skillsPath)) {
+          if (!cfg.skills) cfg.skills = {};
+          if (!cfg.skills.paths) cfg.skills.paths = [];
+          if (!Array.isArray(cfg.skills.paths)) cfg.skills.paths = [cfg.skills.paths];
+          const alreadyAdded = cfg.skills.paths.some((p: string) => p.includes('opencode-mdocs/skills') || p.includes('opencode-mdocs\\skills'));
+          if (!alreadyAdded) {
+            cfg.skills.paths.push(skillsPath);
+          }
+        }
+      } catch (e) {
+        // Graceful degradation: don't fail if config mutation fails
+        console.error('[mdocs] Config registration skipped:', e);
+      }
+
       if (!mdocs.exists()) {
         mdocs.init();
         // Create first initiative tracking the plugin itself

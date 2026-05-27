@@ -6,7 +6,7 @@
 - **Add Full-Text Search Across Initiatives and Wiki** (done) — 2026-05-27 — [enhancement, search, discovery]
 - **Add Audit Log and Event History** (done) — 2026-05-27 — [enhancement, observability, history]
 - **Add Wiki Manager CRUD Operations** (done) — 2026-05-27 — [enhancement, wiki, api]
-- **Auto-Register Agent and Skills in Config Hook** (active) — 2026-05-27 — [enhancement, ux, config]
+- **Auto-Register Agent and Skills in Config Hook** (done) — 2026-05-27 — [enhancement, ux, config]
 - **Add mdocs_dispatch Custom Tool for Subagent Context Assembly** (done) — 2026-05-27 — [enhancement, subagent, orchestration]
 - **Fix Frontmatter Type Mismatch** (done) — 2026-05-27 — [bug, initiative, frontmatter]
 - **Install and Configure opencode-mdocs** (done) — 2026-05-27 — [setup, plugin]
