@@ -1,0 +1,66 @@
+---
+id: prepare-v1-release
+title: Prepare v1 Release
+status: active
+created: 2026-05-27
+updated: 2026-05-27
+owner: system
+tags: [release, v1, milestone, quality]
+related_wiki: []
+---
+
+## Objective
+Prepare the opencode-mdocs plugin for its v1.0.0 release by resolving all remaining bugs, documentation gaps, and quality issues identified in the readiness audit.
+
+## Context
+- Current version: 0.1.0
+- All feature initiatives are complete (14 total)
+- A readiness audit identified 12 gaps and improvement opportunities
+- The plugin needs polish before v1: bug fixes, documentation cleanup, and release hygiene
+- Package.json version needs bump to 1.0.0
+
+## Plan
+- [ ] Fix remaining bugs from readiness audit
+  - [ ] Resolve any open frontmatter type issues (ensure round-trip read/write works)
+  - [ ] Fix test-run script path portability (use `os.tmpdir()`)
+  - [ ] Verify all hook behaviors are consistent
+- [ ] Documentation and quality
+  - [ ] Review and update README for accuracy (installation, custom tools, architecture)
+  - [ ] Add CHANGELOG.md with all v0.1.0 → v1.0.0 changes
+  - [ ] Ensure all code comments are accurate
+  - [ ] Verify package.json metadata (repository URL, author, keywords)
+  - [ ] Add LICENSE file if missing
+- [ ] Release hygiene
+  - [ ] Bump version in package.json to 1.0.0
+  - [ ] Ensure `files` array in package.json includes all necessary artifacts
+  - [ ] Verify build output (dist/) is clean and complete
+  - [ ] Add `.npmignore` if needed
+  - [ ] Tag release in git
+- [ ] Final verification
+  - [ ] Run full test suite (all 88 tests must pass)
+  - [ ] Run linter on all initiatives and wiki (all scores ≥ 4)
+  - [ ] Run test-run.js script successfully
+  - [ ] Verify plugin loads without errors in a clean environment
+  - [ ] Confirm all initiatives are marked `done`
+- [ ] Post-release
+  - [ ] Publish to npm (or prepare publish checklist)
+  - [ ] Update any downstream docs
+
+## Acceptance Criteria
+- Package version is 1.0.0
+- All 88 tests passing
+- All initiatives score ≥ 4 in linter
+- No open initiatives remain
+- README is accurate and complete
+- CHANGELOG.md documents all changes
+- Plugin installs and runs without manual setup (auto-registration works)
+- Clean git history with meaningful commit messages
+
+## Progress Log
+- [2026-05-27] Created initiative file with comprehensive v1 release plan
+- [2026-05-27] Referenced readiness audit findings (12 identified gaps)
+- [2026-05-27] Defined acceptance criteria and verification steps
+- [2026-05-27] Linter score: 5/5
+
+## Artifacts
+- `mdocs/initiatives/prepare-v1-release--2026-05-27.md` — this initiative
