@@ -3,19 +3,26 @@
   "version": "0.1.0",
   "description": "Opencode plugin for initiative/wiki workflow management",
   "license": "MIT",
-  "author": "",
+  "author": "bbaaxx",
   "keywords": [
     "opencode",
     "plugin",
     "docs",
-    "workflow"
+    "workflow",
+    "initiative",
+    "wiki",
+    "ai-assisted-development"
   ],
   "engines": {
     "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/bbaaxx/opencode-mdocs.git"
+  },
+  "homepage": "https://github.com/bbaaxx/opencode-mdocs#readme",
+  "bugs": {
+    "url": "https://github.com/bbaaxx/opencode-mdocs/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
