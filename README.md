@@ -20,7 +20,10 @@ When working on the plugin itself, opencode loads it directly from the built out
 ```bash
 npm install
 npm run build
+npm run setup:local
 ```
+
+The `setup:local` script creates a symlink in `.opencode/agents/` pointing to the package's agent file. This is required because opencode discovers agents at startup (before the plugin's config hook runs).
 
 Create `opencode.json` in the project root:
 
@@ -30,8 +33,6 @@ Create `opencode.json` in the project root:
   "plugin": ["./dist/index.js"]
 }
 ```
-
-The plugin automatically registers the `mdocs-orchestrator` agent and skills directory on load.
 
 ### For Consumers (after npm publish)
 

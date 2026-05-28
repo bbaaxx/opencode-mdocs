@@ -1,6 +1,7 @@
 # Initiatives
 
 - **Prepare v1 Release** (active) — 2026-05-27 — [release, v1, milestone, quality]
+- **Fix Local Dogfooding Agent and Skills Discovery** (active) — 2026-05-27 — [bug, dogfooding, local-development, agent, config]
 - **Add Checkable Plan Items to Initiatives** (done) — 2026-05-27 — [enhancement, workflow, initiatives]
 - **Add mdocs Linter for Handoff Quality Gates** (done) — 2026-05-27 — [enhancement, quality, automation, linting]
 - **Add Initiative Priorities and Dependencies** (done) — 2026-05-27 — [enhancement, initiatives, scheduling]

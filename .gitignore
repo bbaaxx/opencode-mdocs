@@ -10,5 +10,8 @@ coverage/
 # Runtime workflow state — regenerated on each session
 mdocs/.workflow-state.json
 
-# opencode runtime directory (auto-discovered, plugin auto-registers agents/skills)
-.opencode/
+# opencode runtime files (but keep agent symlink)
+.opencode/node_modules/
+.opencode/package.json
+.opencode/package-lock.json
+.opencode/bun.lock
