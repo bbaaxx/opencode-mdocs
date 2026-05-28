@@ -1,7 +1,7 @@
 ---
 id: prepare-v1-release
 title: Prepare v1 Release
-status: active
+status: done
 created: 2026-05-27
 updated: 2026-05-27
 owner: system
@@ -33,19 +33,19 @@ Prepare the opencode-mdocs plugin for its v1.0.0 release by resolving all remain
   - [x] Ensure `files` array in package.json includes all necessary artifacts
   - [x] Verify build output (dist/) is clean and complete
   - [x] Add `.npmignore` if needed
-  - [ ] Tag release in git
-- [ ] Publish to npm (recommended over GitHub Packages)
+  - [x] Tag release in git
+- [x] Publish to npm (recommended over GitHub Packages)
   - [x] Verify package with `npm pack --dry-run`
-  - [ ] Publish: `npm publish --access public`
-  - [ ] Verify package on https://www.npmjs.com/package/opencode-mdocs
-- [ ] Final verification
-  - [ ] Run full test suite (all 88 tests must pass)
-  - [ ] Run linter on all initiatives and wiki (all scores ≥ 4)
-  - [ ] Run test-run.js script successfully
-  - [ ] Confirm all initiatives are marked `done`
-- [ ] Post-release
-  - [ ] Create GitHub release with changelog
-  - [ ] Update any downstream docs
+  - [x] Publish: `npm publish --access public`
+  - [x] Verify package on https://www.npmjs.com/package/opencode-mdocs
+- [x] Final verification
+  - [x] Run full test suite (all 88 tests must pass)
+  - [x] Run linter on all initiatives and wiki (all scores ≥ 4)
+  - [x] Run test-run.js script successfully
+  - [x] Confirm all initiatives are marked `done`
+- [x] Post-release
+  - [x] Create GitHub release with changelog
+  - [x] Update any downstream docs
 
 ## Acceptance Criteria
 - Package version is 1.0.0
@@ -62,6 +62,13 @@ Prepare the opencode-mdocs plugin for its v1.0.0 release by resolving all remain
 - [2026-05-27] Referenced readiness audit findings (12 identified gaps)
 - [2026-05-27] Defined acceptance criteria and verification steps
 - [2026-05-27] Linter score: 5/5
+- [2026-05-28] Fixed test-run.js portability with os.tmpdir()
+- [2026-05-28] Added CHANGELOG.md and LICENSE (MIT)
+- [2026-05-28] Bumped version to 1.0.0 in package.json
+- [2026-05-28] All 88 tests passing, linter scores ≥ 4.5
+- [2026-05-28] Published v1.0.0 to npm: https://www.npmjs.com/package/opencode-mdocs
+- [2026-05-28] Tagged v1.0.0 in git and created GitHub release
+- [2026-05-28] All initiatives marked done — v1 release complete
 
 ## Artifacts
 - `mdocs/initiatives/prepare-v1-release--2026-05-27.md` — this initiative

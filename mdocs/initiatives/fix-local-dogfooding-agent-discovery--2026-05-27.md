@@ -1,7 +1,7 @@
 ---
 id: fix-local-dogfooding-agent-discovery
 title: Fix Local Dogfooding Agent and Skills Discovery
-status: active
+status: done
 created: 2026-05-27
 updated: 2026-05-27
 owner: system
