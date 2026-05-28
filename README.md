@@ -11,6 +11,20 @@ This plugin brings structure to AI-assisted development by:
 3. **Enforcing a workflow** — gates tool usage to ensure planning happens before execution
 4. **Orchestrating subagents** — assembles context from initiatives and wiki to hand off to specialized agents
 
+## Philosophy
+
+opencode-mdocs is built on a simple but radical idea: **AI agents running in different terminals, applications, or machines are not separate entities — they are one distributed agent with different focal points.**
+
+In 2026, AI-assisted coding is normal, but context is fragile. Every session restart, every new terminal, every handoff to a brainstorming agent while your primary agent is busy — all of these force you to rebuild context from scratch. The solution is not better prompts; it is **shared, durable memory**.
+
+This plugin implements three core principles:
+
+1. **Distributed Single Entity** — All agent instances share one memory system. When you talk to any instance, you talk to the same intelligence with a different window open.
+2. **Agents Deserve Their Own Memory** — Agents should organize knowledge in the way that serves their reasoning, not force it into human-optimized formats. But humans still deserve to read, share, and reference it.
+3. **Two Layers of Memory** — **Initiatives** hold the practical, collaborative, action-oriented state (planning, logs, status). **Wiki** holds stable, long-term knowledge that agents manage freely.
+
+For the full story behind these principles, see the [Core Principles wiki entry](mdocs/wiki/philosophy/core-principles.md).
+
 ## Installation
 
 ### For Local Development (Dogfooding)
