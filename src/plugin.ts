@@ -9,6 +9,11 @@ import { MdocsLinter } from './linter';
 import { SearchEngine } from './search';
 import { AuditLog } from './audit';
 
+function loadAgentPrompt(agentPath: string) {
+  const content = fs.readFileSync(agentPath, 'utf8');
+  return content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim();
+}
+
 export function createPlugin(baseDir: string) {
   const mdocsRoot = path.join(baseDir, 'mdocs');
   const mdocs = new MdocsManager(mdocsRoot);
@@ -26,14 +31,22 @@ export function createPlugin(baseDir: string) {
         // Auto-register mdocs-orchestrator agent
         const agentPath = path.resolve(__dirname, '../agents/mdocs-orchestrator.md');
         if (fs.existsSync(agentPath)) {
-          if (!cfg.agents) cfg.agents = [];
-          if (!Array.isArray(cfg.agents)) cfg.agents = [cfg.agents];
-          const alreadyRegistered = cfg.agents.some((a: any) =>
-            (typeof a === 'string' && a.includes('mdocs-orchestrator')) ||
-            (a && a.name === 'mdocs-orchestrator')
-          );
-          if (!alreadyRegistered) {
-            cfg.agents.push({ name: 'mdocs-orchestrator', path: agentPath });
+          if (!cfg.agent) cfg.agent = {};
+          if (!cfg.agent['mdocs-orchestrator']) {
+            cfg.agent['mdocs-orchestrator'] = {
+              description: 'Orchestrates work using the mdocs initiative/wiki workflow.',
+              mode: 'primary',
+              permission: {
+                read: 'allow',
+                glob: 'allow',
+                grep: 'allow',
+                list: 'allow',
+                edit: 'allow',
+                write: 'allow',
+                bash: 'allow'
+              },
+              prompt: loadAgentPrompt(agentPath)
+            };
           }
         }
 
@@ -151,7 +164,7 @@ export function createPlugin(baseDir: string) {
     },
 
     // Custom tools
-    tools: {
+    tool: {
       mdocs_init: {
         description: "Initialize /mdocs folder structure",
         execute: async () => {

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-05-28
+
+### Fixed
+
+- Updated opencode plugin custom tools export from `tools` to `tool` so `mdocs_init`, `mdocs_status`, `mdocs_search`, `mdocs_dispatch`, and `mdocs_audit` appear in current opencode.
+- Updated agent auto-registration from legacy `cfg.agents` array to current `cfg.agent['mdocs-orchestrator']` object shape.
+- Added compatibility tests for current opencode plugin/config field names and default plugin export shape.
+
 ## [1.0.0] - 2026-05-28
 
 ### Added

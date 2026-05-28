@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import pluginDefault from '../index';
 import { createPlugin } from '../plugin';
 
 const testDir = path.join(__dirname, 'test-plugin');
@@ -20,7 +21,7 @@ describe('Plugin Tools', () => {
   test('mdocs_dispatch returns assembled context for existing initiative', async () => {
     const plugin = createPlugin(testDir);
     // Initialize mdocs structure
-    plugin.tools.mdocs_init.execute();
+    (plugin as any).tool.mdocs_init.execute();
 
     // Create an initiative
     const fs = require('fs');
@@ -71,7 +72,7 @@ tags: ["test"]
 Wiki content for testing`
     );
 
-    const result = await plugin.tools.mdocs_dispatch.execute({ initiativeId: 'test-initiative' });
+    const result = await (plugin as any).tool.mdocs_dispatch.execute({ initiativeId: 'test-initiative' });
 
     expect(result.error).toBeUndefined();
     expect(result.initiativeId).toBe('test-initiative');
@@ -86,16 +87,16 @@ Wiki content for testing`
 
   test('mdocs_dispatch returns error for missing initiative', async () => {
     const plugin = createPlugin(testDir);
-    plugin.tools.mdocs_init.execute();
+    (plugin as any).tool.mdocs_init.execute();
 
-    const result = await plugin.tools.mdocs_dispatch.execute({ initiativeId: 'non-existent' });
+    const result = await (plugin as any).tool.mdocs_dispatch.execute({ initiativeId: 'non-existent' });
 
     expect(result.error).toBe('Initiative not found');
   });
 
   test('mdocs_dispatch includes related wiki entries in context', async () => {
     const plugin = createPlugin(testDir);
-    plugin.tools.mdocs_init.execute();
+    (plugin as any).tool.mdocs_init.execute();
 
     const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
     fs.mkdirSync(initiativeDir, { recursive: true });
@@ -155,7 +156,7 @@ tags: []
 Content B`
     );
 
-    const result = await plugin.tools.mdocs_dispatch.execute({ initiativeId: 'multi-wiki' });
+    const result = await (plugin as any).tool.mdocs_dispatch.execute({ initiativeId: 'multi-wiki' });
 
     expect(result.error).toBeUndefined();
     expect(result.relatedWikiCount).toBe(2);
@@ -166,7 +167,7 @@ Content B`
   test('mdocs_dispatch uses active initiative when no initiativeId provided', async () => {
     // Initialize mdocs structure first
     const pluginInit = createPlugin(testDir);
-    pluginInit.tools.mdocs_init.execute();
+    (pluginInit as any).tool.mdocs_init.execute();
 
     const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
     fs.mkdirSync(initiativeDir, { recursive: true });
@@ -206,7 +207,7 @@ The active one
     // Create a new plugin instance that will read the updated state
     const plugin = createPlugin(testDir);
 
-    const result = await plugin.tools.mdocs_dispatch.execute({});
+    const result = await (plugin as any).tool.mdocs_dispatch.execute({});
 
     expect(result.error).toBeUndefined();
     expect(result.initiativeId).toBe('active-init');
@@ -215,9 +216,9 @@ The active one
 
   test('mdocs_dispatch returns error when no initiativeId and no active initiative', async () => {
     const plugin = createPlugin(testDir);
-    plugin.tools.mdocs_init.execute();
+    (plugin as any).tool.mdocs_init.execute();
 
-    const result = await plugin.tools.mdocs_dispatch.execute({});
+    const result = await (plugin as any).tool.mdocs_dispatch.execute({});
 
     expect(result.error).toBe('No initiativeId provided and no active initiative');
   });
@@ -241,9 +242,24 @@ describe('Config Hook', () => {
     const cfg: any = {};
     plugin.config(cfg);
 
-    expect(cfg.agents).toBeDefined();
-    expect(cfg.agents.length).toBeGreaterThan(0);
-    expect(cfg.agents.some((a: any) => a.name === 'mdocs-orchestrator')).toBe(true);
+    expect(cfg.agent).toBeDefined();
+    expect(cfg.agent['mdocs-orchestrator']).toEqual({
+      description: 'Orchestrates work using the mdocs initiative/wiki workflow.',
+      mode: 'primary',
+      permission: {
+        read: 'allow',
+        glob: 'allow',
+        grep: 'allow',
+        list: 'allow',
+        edit: 'allow',
+        write: 'allow',
+        bash: 'allow'
+      },
+      prompt: expect.stringContaining('You are a workflow orchestrator using the mdocs system.')
+    });
+    expect(cfg.agent['mdocs-orchestrator'].prompt).not.toContain('---');
+    expect(cfg.agent['mdocs-orchestrator'].prompt).not.toContain('description:');
+    expect(cfg.agents).toBeUndefined();
 
     expect(cfg.skills).toBeDefined();
     expect(cfg.skills.paths).toBeDefined();
@@ -253,11 +269,20 @@ describe('Config Hook', () => {
   test('does not duplicate agent if already registered', () => {
     const plugin = createPlugin(testDir);
     const cfg: any = {
-      agents: [{ name: 'mdocs-orchestrator', path: '/some/path' }]
+      agent: {
+        'mdocs-orchestrator': {
+          description: 'Existing orchestrator',
+          mode: 'primary',
+          permission: {},
+          prompt: 'Existing prompt'
+        }
+      }
     };
     plugin.config(cfg);
 
-    expect(cfg.agents.length).toBe(1);
+    expect(Object.keys(cfg.agent)).toEqual(['mdocs-orchestrator']);
+    expect(cfg.agent['mdocs-orchestrator'].prompt).toBe('Existing prompt');
+    expect(cfg.agents).toBeUndefined();
   });
 
   test('does not duplicate skills path if already present', () => {
@@ -287,5 +312,26 @@ describe('Config Hook', () => {
     cfg.skills = Object.create(null);
     // This should not throw
     expect(() => plugin.config(cfg)).not.toThrow();
+  });
+
+  test('exposes singular tool hook and no legacy tools hook', () => {
+    const plugin = createPlugin(testDir) as any;
+
+    expect(Object.keys(plugin.tool).sort()).toEqual([
+      'mdocs_audit',
+      'mdocs_dispatch',
+      'mdocs_init',
+      'mdocs_search',
+      'mdocs_status'
+    ]);
+    expect(plugin.tools).toBeUndefined();
+  });
+
+  test('default export returns plugin with current opencode tool hook', async () => {
+    expect(typeof pluginDefault).toBe('function');
+
+    const hooks = await pluginDefault({ client: {}, project: {}, directory: testDir });
+
+    expect((hooks as any).tool.mdocs_status).toBeDefined();
   });
 });
