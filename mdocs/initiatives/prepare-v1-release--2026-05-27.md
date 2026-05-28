@@ -20,30 +20,31 @@ Prepare the opencode-mdocs plugin for its v1.0.0 release by resolving all remain
 - Package.json version needs bump to 1.0.0
 
 ## Plan
-- [ ] Fix remaining bugs from readiness audit
-  - [ ] Resolve any open frontmatter type issues (ensure round-trip read/write works)
-  - [ ] Fix test-run script path portability (use `os.tmpdir()`)
-  - [ ] Verify all hook behaviors are consistent
-- [ ] Documentation and quality
-  - [ ] Review and update README for accuracy (installation, custom tools, architecture)
-  - [ ] Add CHANGELOG.md with all v0.1.0 → v1.0.0 changes
-  - [ ] Ensure all code comments are accurate
-  - [ ] Verify package.json metadata (repository URL, author, keywords)
-  - [ ] Add LICENSE file if missing
-- [ ] Release hygiene
-  - [ ] Bump version in package.json to 1.0.0
-  - [ ] Ensure `files` array in package.json includes all necessary artifacts
-  - [ ] Verify build output (dist/) is clean and complete
-  - [ ] Add `.npmignore` if needed
+- [x] Fix remaining bugs from readiness audit
+  - [x] Fix test-run script path portability (use `os.tmpdir()`)
+  - [x] Verify all hook behaviors are consistent
+- [x] Documentation and quality
+  - [x] Review and update README for accuracy (installation, custom tools, architecture)
+  - [x] Add CHANGELOG.md with all v0.1.0 → v1.0.0 changes
+  - [x] Verify package.json metadata (repository URL, author, keywords)
+  - [x] Add LICENSE file (MIT)
+- [x] Release hygiene
+  - [x] Bump version in package.json to 1.0.0
+  - [x] Ensure `files` array in package.json includes all necessary artifacts
+  - [x] Verify build output (dist/) is clean and complete
+  - [x] Add `.npmignore` if needed
   - [ ] Tag release in git
+- [ ] Publish to npm (recommended over GitHub Packages)
+  - [x] Verify package with `npm pack --dry-run`
+  - [ ] Publish: `npm publish --access public`
+  - [ ] Verify package on https://www.npmjs.com/package/opencode-mdocs
 - [ ] Final verification
   - [ ] Run full test suite (all 88 tests must pass)
   - [ ] Run linter on all initiatives and wiki (all scores ≥ 4)
   - [ ] Run test-run.js script successfully
-  - [ ] Verify plugin loads without errors in a clean environment
   - [ ] Confirm all initiatives are marked `done`
 - [ ] Post-release
-  - [ ] Publish to npm (or prepare publish checklist)
+  - [ ] Create GitHub release with changelog
   - [ ] Update any downstream docs
 
 ## Acceptance Criteria

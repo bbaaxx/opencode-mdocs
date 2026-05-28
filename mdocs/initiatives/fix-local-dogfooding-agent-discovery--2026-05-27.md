@@ -55,5 +55,15 @@ Fix the local development (dogfooding) setup so the mdocs-orchestrator agent and
 - All tests pass
 
 ## Progress Log
+- [2026-05-27] Created initiative after identifying the agent discovery breakage
+- [2026-05-27] Restored `.opencode/agents/mdocs-orchestrator.md` as a symlink to `./agents/mdocs-orchestrator.md`
+- [2026-05-27] Updated `.gitignore` with granular rules (ignore runtime files, keep symlink)
+- [2026-05-27] Added `npm run setup:local` script for easy symlink creation
+- [2026-05-27] Updated README with clear local dev instructions
+- [2026-05-27] All tests pass (88/88); committed and pushed to GitHub
 
 ## Artifacts
+- `.opencode/agents/mdocs-orchestrator.md` — symlink to `./agents/mdocs-orchestrator.md`
+- `.gitignore` — granular ignore rules
+- `package.json` — `setup:local` script
+- `README.md` — updated local dev instructions

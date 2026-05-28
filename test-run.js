@@ -6,10 +6,11 @@
 
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 // We need to run this from the plugin directory so it can resolve
 const pluginPath = path.resolve(__dirname);
-const testProjectDir = path.resolve('/tmp/opencode-mdocs-test-run');
+const testProjectDir = path.join(os.tmpdir(), 'opencode-mdocs-test-run');
 const mdocsRoot = path.join(testProjectDir, 'mdocs');
 
 // Clean up any previous test run
