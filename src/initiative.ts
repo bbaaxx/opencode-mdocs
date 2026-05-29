@@ -275,16 +275,16 @@ export class InitiativeManager {
 
   private updateIndex(): void {
     const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
-    const initiatives: Initiative[] = [];
+    const entries: { initiative: Initiative; fileName: string }[] = [];
     for (const f of files) {
       try {
         const init = this.read(f);
-        if (init) initiatives.push(init);
+        if (init) entries.push({ initiative: init, fileName: f });
       } catch {
         // Skip malformed files
       }
     }
-    const lines = initiatives.map(i => `- **${i.title}** (${i.status}) — ${this.formatFileName(i)} — ${i.created} — [${i.tags.join(', ')}]`);
+    const lines = entries.map(({ initiative: i, fileName }) => `- **${i.title}** (${i.status}) — ${fileName} — ${i.created} — [${i.tags.join(', ')}]`);
     const index = `# Initiatives\n\n${lines.join('\n') || 'No initiatives yet.'}`;
     fs.writeFileSync(path.join(this.dir, 'INDEX.md'), index, 'utf8');
   }

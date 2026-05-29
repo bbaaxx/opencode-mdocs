@@ -227,9 +227,10 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_lookup: {
         description: "Resolve an initiative by id, title, slug, or filename",
-        execute: async (args: { query: string; field?: 'id' | 'title' | 'filename' }) => {
+        execute: async (args: { query: string; field?: 'id' | 'title' | 'slug' }) => {
           try {
             const query = args?.query || '';
+            const normalizedQuery = query.toLowerCase();
             const querySlug = slugify(query);
             const initiativesDir = path.join(mdocsRoot, 'initiatives');
             const files = fs.existsSync(initiativesDir)
@@ -244,21 +245,24 @@ export function createPlugin(baseDir: string) {
               const fileSlug = slugify(fileStem.replace(/--\d{4}-\d{2}-\d{2}$/, ''));
               const idSlug = slugify(initiative.id || '');
               const titleSlug = slugify(initiative.title || '');
+              const title = initiative.title || '';
               const candidates: Record<string, boolean> = {
                 id: initiative.id === query || idSlug === querySlug,
-                title: initiative.title === query || titleSlug === querySlug,
-                filename: fileName === query || fileStem === query || fileSlug === querySlug
+                title: title.toLowerCase().includes(normalizedQuery) || titleSlug === querySlug,
+                slug: idSlug === querySlug || titleSlug === querySlug || fileName === query || fileStem === query || fileSlug === querySlug
               };
 
               const matched = args?.field
                 ? candidates[args.field]
-                : candidates.id || candidates.title || candidates.filename;
+                : candidates.id || candidates.title || candidates.slug;
 
               if (matched) {
                 return {
                   type: 'initiative',
                   id: initiative.id,
                   title: initiative.title,
+                  status: initiative.status,
+                  tags: initiative.tags,
                   filename: fileName
                 };
               }

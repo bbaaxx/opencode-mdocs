@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import pluginDefault from '../index';
 import { createPlugin } from '../plugin';
+import { InitiativeManager } from '../initiative';
 
 const testDir = path.join(__dirname, 'test-plugin');
 
@@ -248,6 +249,99 @@ The active one
     expect(byTitle.error).toBeUndefined();
     expect(byId.filename).toBe(`install-mdocs--${today}.md`);
     expect(byTitle.filename).toBe(`install-mdocs--${today}.md`);
+  });
+
+  test('mdocs_lookup supports slug, partial title, and metadata results', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(
+      path.join(initiativeDir, 'install-and-configure-opencode-mdocs--2026-05-27.md'),
+      `---
+id: "install-mdocs"
+title: "Install and Configure opencode-mdocs"
+status: "done"
+created: "2026-05-27"
+updated: "2026-05-27"
+owner: "system"
+tags: ["setup", "plugin"]
+related_wiki: []
+---
+
+## Objective
+Legacy filename
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`,
+      'utf8'
+    );
+
+    const bySlug = await (plugin as any).tool.mdocs_lookup.execute({ query: 'install-and-configure-opencode-mdocs', field: 'slug' });
+    const byPartialTitle = await (plugin as any).tool.mdocs_lookup.execute({ query: 'Configure opencode', field: 'title' });
+
+    expect(bySlug).toEqual({
+      type: 'initiative',
+      filename: 'install-and-configure-opencode-mdocs--2026-05-27.md',
+      id: 'install-mdocs',
+      title: 'Install and Configure opencode-mdocs',
+      status: 'done',
+      tags: ['setup', 'plugin']
+    });
+    expect(byPartialTitle.filename).toBe('install-and-configure-opencode-mdocs--2026-05-27.md');
+  });
+
+  test('initiative index displays actual filename from disk for mismatched legacy files', () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(
+      path.join(initiativeDir, 'install-and-configure-opencode-mdocs--2026-05-27.md'),
+      `---
+id: "install-mdocs"
+title: "Install and Configure opencode-mdocs"
+status: "done"
+created: "2026-05-27"
+updated: "2026-05-27"
+owner: "system"
+tags: ["setup", "plugin"]
+related_wiki: []
+---
+
+## Objective
+Legacy filename
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`,
+      'utf8'
+    );
+
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'new-id',
+      title: 'New Initiative',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'test',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Trigger index update',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    const index = fs.readFileSync(path.join(initiativeDir, 'INDEX.md'), 'utf8');
+    expect(index).toContain('install-and-configure-opencode-mdocs--2026-05-27.md');
+    expect(index).not.toContain('install-mdocs--2026-05-27.md');
   });
 });
 

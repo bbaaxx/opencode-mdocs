@@ -58,6 +58,8 @@ Fix three UX issues that cause agents to misresolve initiative filenames:
 - [2026-05-29] Will run stress-test scenarios to confirm exact failure modes before TDD implementation.
 - [2026-05-29] Task 1 RED: `npm test -- src/__tests__/plugin.test.ts` failed for id-stem filename creation, missing `mdocs_lookup`, and missing tool registration.
 - [2026-05-29] Task 1 GREEN: `npm test -- src/__tests__/plugin.test.ts` passed 14 tests; `npm test` passed 92 tests across 11 suites; `npm run build` passed.
+- [2026-05-29] Task 1 follow-up RED: `npm test -- src/__tests__/plugin.test.ts` failed for missing `field: 'slug'` lookup behavior, missing lookup metadata, missing partial-title match, and recomputed INDEX filenames for legacy files.
+- [2026-05-29] Task 1 follow-up GREEN: `npm test -- src/__tests__/plugin.test.ts` passed 16 tests; `npm test` passed 94 tests across 11 suites; `npm run build` passed.
 
 ## Artifacts
 - `mdocs/initiatives/fix-slug-initiative-ux--2026-05-29.md` — this initiative
