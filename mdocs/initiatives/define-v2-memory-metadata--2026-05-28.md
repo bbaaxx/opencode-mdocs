@@ -20,34 +20,34 @@ Define and implement backward-compatible v2 metadata for initiatives and wiki en
 - This initiative should avoid large migrations; v1 files must keep working.
 
 ## Plan
-- [ ] Design v2 metadata fields
-  - [ ] For initiatives: `schema_version`, `phase`, `handoff_summary`, `open_questions`, `blocked_by`, `next_agent_action`, `decision_state`
-  - [ ] For wiki: `schema_version`, `knowledge_type`, `stability`, `confidence`, `source_initiatives`, `supersedes`, `derived_from`
-  - [ ] Document defaults for old files that omit these fields
-- [ ] Add type tests
-  - [ ] Update `src/__tests__/types.test.ts` for new optional fields
-  - [ ] Run targeted test and confirm failure before implementation
-- [ ] Update TypeScript types and parsers
-  - [ ] Modify `src/types.ts` with optional v2 fields
-  - [ ] Modify `src/initiative.ts` frontmatter parsing/writing to preserve and emit v2 fields when provided
-  - [ ] Modify `src/wiki.ts` frontmatter parsing/writing to preserve and emit v2 fields when provided
-- [ ] Update templates
-  - [ ] Update `templates/initiative.md` with v2 metadata and human-readable sections for handoff/open questions
-  - [ ] Update `templates/wiki-entry.md` with v2 metadata placeholders
-- [ ] Update linting
-  - [ ] Update `src/linter.ts` to encourage, but not initially require, v2 metadata
-  - [ ] Add tests in `src/__tests__/linter.test.ts` for v2-aware warnings and backward compatibility
-- [ ] Update docs
-  - [ ] Update README file format sections
-  - [ ] Update `skills/mdocs-initiative/SKILL.md` with v2 metadata guidance
-  - [ ] Add or update wiki entry describing initiative/wiki boundary semantics
-- [ ] Verify
-  - [ ] Run `npm test -- src/__tests__/types.test.ts src/__tests__/initiative.test.ts src/__tests__/wiki.test.ts src/__tests__/linter.test.ts`
-  - [ ] Run `npm test`
-  - [ ] Run `npm run build`
-- [ ] Report
-  - [ ] Update this initiative progress log with changed files and test evidence
-  - [ ] Add migration notes to wiki if needed
+- [x] Design v2 metadata fields
+  - [x] For initiatives: `schema_version`, `phase`, `handoff_summary`, `open_questions`, `blocked_by`, `next_agent_action`, `decision_state`
+  - [x] For wiki: `schema_version`, `knowledge_type`, `stability`, `confidence`, `source_initiatives`, `supersedes`, `derived_from`
+  - [x] Document defaults for old files that omit these fields
+- [x] Add type tests
+  - [x] Update `src/__tests__/types.test.ts` for new optional fields
+  - [x] Run targeted test and confirm failure before implementation
+- [x] Update TypeScript types and parsers
+  - [x] Modify `src/types.ts` with optional v2 fields
+  - [x] Modify `src/initiative.ts` frontmatter parsing/writing to preserve and emit v2 fields when provided
+  - [x] Modify `src/wiki.ts` frontmatter parsing/writing to preserve and emit v2 fields when provided
+- [x] Update templates
+  - [x] Update `templates/initiative.md` with v2 metadata and human-readable sections for handoff/open questions
+  - [x] Update `templates/wiki-entry.md` with v2 metadata placeholders
+- [x] Update linting
+  - [x] Update `src/linter.ts` to encourage, but not initially require, v2 metadata
+  - [x] Add tests in `src/__tests__/linter.test.ts` for v2-aware warnings and backward compatibility
+- [x] Update docs
+  - [x] Update README file format sections
+  - [x] Update `skills/mdocs-initiative/SKILL.md` with v2 metadata guidance
+  - [x] Add or update wiki entry describing initiative/wiki boundary semantics
+- [x] Verify
+  - [x] Run `npm test -- src/__tests__/types.test.ts src/__tests__/initiative.test.ts src/__tests__/wiki.test.ts src/__tests__/linter.test.ts`
+  - [x] Run `npm test`
+  - [x] Run `npm run build`
+- [x] Report
+  - [x] Update this initiative progress log with changed files and test evidence
+  - [x] Add migration notes to wiki if needed
 
 ## Acceptance Criteria
 - v1 initiative/wiki files continue to parse without errors.

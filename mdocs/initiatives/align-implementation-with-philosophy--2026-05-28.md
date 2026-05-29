@@ -8,6 +8,9 @@ updated: 2026-05-29
 owner: bbaaxx
 tags: [roadmap, philosophy, architecture, ux, memory]
 related_wiki: [philosophy/core-principles, philosophy/origin-narrative, architecture/plugin-design-spec, architecture/implementation-plan, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
+phase: done
+blockers: []
+next_action: ""
 ---
 
 ## Objective
@@ -44,6 +47,14 @@ Analyze the gap between the current opencode-mdocs implementation and the projec
 - The roadmap covers both product/UX and technical architecture, treating them as interdependent.
 - Improvement opportunities are prioritized and grouped into actionable phases.
 - Follow-up implementation initiatives can be created from the roadmap without rediscovering context.
+
+## Verification Remediation Plan
+- [x] Update `templates/initiative.md` and `templates/wiki-entry.md` so newly scaffolded artifacts include v2 memory metadata fields.
+- [x] Mark Phase 1 durable wiki learnings as stable by adding lifecycle/provenance metadata to `mdocs/wiki/architecture/philosophy-implementation-gap-analysis.md` and `mdocs/wiki/roadmap/philosophy-alignment-roadmap.md`.
+- [x] Fix malformed frontmatter in `mdocs/initiatives/add-resume-status-cockpit--2026-05-28.md` so `updated` and `owner` are separate keys.
+- [x] Check off completed plan items in the four Phase 1 sub-initiatives while preserving their progress logs and artifacts.
+- [x] Rerun `npm test`, `npm run build`, `npm pack --dry-run`, and plugin `mdocs_validate`.
+- [x] Request independent review again before marking this initiative done.
 
 ## Implementation Plan
 
@@ -786,6 +797,9 @@ Expected: tests and build pass, skill docs describe new workflow behavior, and r
 - [2026-05-28] Converted Phase 1 roadmap into four implementation initiatives: dispatch retrieval, resume/status cockpit, v2 memory metadata, and cross-link graph linter.
 - [2026-05-29] Added a detailed implementation plan directly to this initiative file. The plan sequences Phase 1 as v2 metadata, dispatch memory retrieval, resume/status cockpit, cross-link graph linting, and documentation capture with TDD verification at each step.
 - [2026-05-29] **Phase 1 implementation complete.** All 5 tasks executed with TDD (RED/GREEN evidence for each), 9 new tests added (113 → 122), TypeScript build passes, npm pack succeeds. Commits: feat: add mdocs memory metadata, feat: enrich dispatch memory retrieval, feat: add mdocs resume cockpit, feat: lint mdocs memory graph, docs: capture phase one memory alignment. All four Phase 1 sub-initiatives marked done.
+- [2026-05-29] Verification reopened initiative as active. Fresh evidence: `npm test` passed 11 suites / 137 tests, `npm run build` passed, `npm pack --dry-run` succeeded, and plugin `mdocs_validate` returned `valid: true` with warnings. Independent review found blocking completion issues in durable artifacts: templates missing v2 metadata, stable wiki lifecycle metadata missing for Phase 1 learnings, malformed `add-resume-status-cockpit` frontmatter, and unchecked Phase 1 sub-initiative plans despite `status: done`.
+- [2026-05-29] Remediated verification blockers: templates now include v2 metadata, Phase 1 wiki learnings are marked `lifecycle: stable`, malformed resume-cockpit frontmatter is fixed, and the four Phase 1 sub-initiative plans are checked off. Verification evidence: `npm test` passed 11 suites / 137 tests, `npm run build` passed, `npm pack --dry-run` succeeded, and plugin `mdocs_validate` returned `valid: true` with no errors and no Phase 1 stable-learning warnings.
+- [2026-05-29] Independent remediation review passed with no blocking issues. Marked initiative done after confirming the review checklist, stable wiki metadata, corrected frontmatter, and checked Phase 1 sub-initiative plans.
 
 ## Artifacts
 - `mdocs/initiatives/align-implementation-with-philosophy--2026-05-28.md` — this initiative

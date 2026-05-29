@@ -20,39 +20,39 @@ Make initiative/wiki relationships first-class by adding linter rules and option
 - The two-layer memory system depends on reliable cross-links between practical workflow state and stable knowledge.
 
 ## Plan
-- [ ] Baseline current linter behavior
-  - [ ] Read `src/linter.ts`, `src/initiative.ts`, `src/wiki.ts`, and `src/__tests__/linter.test.ts`
-  - [ ] Capture existing lint checks in this initiative progress log
-- [ ] Add failing graph-lint tests
-  - [ ] Test broken `related_wiki` references from initiatives
-  - [ ] Test broken `related_initiatives` references from wiki entries
-  - [ ] Test missing reciprocal links as warnings
-  - [ ] Test orphaned wiki entries as warnings unless tagged as standalone/reference
-  - [ ] Test `depends_on` references point to existing initiatives
-  - [ ] Test artifact paths exist or are clearly external URLs
-  - [ ] Run targeted tests and confirm they fail before implementation
-- [ ] Implement graph collection helpers
-  - [ ] Add helper functions in `src/linter.ts` or a new `src/graph.ts`
-  - [ ] Normalize wiki refs as `category/id`
-  - [ ] Normalize initiative refs by `id`, not filename
-  - [ ] Collect backlinks and orphan candidates deterministically
-- [ ] Implement linter rules
-  - [ ] Broken references produce errors
-  - [ ] Missing reciprocals produce warnings
-  - [ ] Orphans produce warnings with recommended link targets when obvious
-  - [ ] Dependency cycles produce errors or warnings based on severity
-  - [ ] Artifact path issues produce warnings unless the path is required for execution
-- [ ] Expose results
-  - [ ] Include graph issues in `lintAll()` output
-  - [ ] If `mdocs_lint` is exposed or restored, include graph issue counts there
-  - [ ] Update README linter docs for graph checks
-- [ ] Verify
-  - [ ] Run `npm test -- src/__tests__/linter.test.ts`
-  - [ ] Run `npm test`
-  - [ ] Run `npm run build`
-- [ ] Report
-  - [ ] Update this initiative progress log with changed files and test evidence
-  - [ ] Update gap analysis or roadmap wiki with any refined graph semantics
+- [x] Baseline current linter behavior
+  - [x] Read `src/linter.ts`, `src/initiative.ts`, `src/wiki.ts`, and `src/__tests__/linter.test.ts`
+  - [x] Capture existing lint checks in this initiative progress log
+- [x] Add failing graph-lint tests
+  - [x] Test broken `related_wiki` references from initiatives
+  - [x] Test broken `related_initiatives` references from wiki entries
+  - [x] Test missing reciprocal links as warnings
+  - [x] Test orphaned wiki entries as warnings unless tagged as standalone/reference
+  - [x] Test `depends_on` references point to existing initiatives
+  - [x] Test artifact paths exist or are clearly external URLs
+  - [x] Run targeted tests and confirm they fail before implementation
+- [x] Implement graph collection helpers
+  - [x] Add helper functions in `src/linter.ts` or a new `src/graph.ts`
+  - [x] Normalize wiki refs as `category/id`
+  - [x] Normalize initiative refs by `id`, not filename
+  - [x] Collect backlinks and orphan candidates deterministically
+- [x] Implement linter rules
+  - [x] Broken references produce errors
+  - [x] Missing reciprocals produce warnings
+  - [x] Orphans produce warnings with recommended link targets when obvious
+  - [x] Dependency cycles produce errors or warnings based on severity
+  - [x] Artifact path issues produce warnings unless the path is required for execution
+- [x] Expose results
+  - [x] Include graph issues in `lintAll()` output
+  - [x] If `mdocs_lint` is exposed or restored, include graph issue counts there
+  - [x] Update README linter docs for graph checks
+- [x] Verify
+  - [x] Run `npm test -- src/__tests__/linter.test.ts`
+  - [x] Run `npm test`
+  - [x] Run `npm run build`
+- [x] Report
+  - [x] Update this initiative progress log with changed files and test evidence
+  - [x] Update gap analysis or roadmap wiki with any refined graph semantics
 
 ## Acceptance Criteria
 - Linter detects broken initiative/wiki links.

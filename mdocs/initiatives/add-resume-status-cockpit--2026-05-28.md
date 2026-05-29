@@ -4,7 +4,8 @@ title: Add Resume and Status Cockpit
 status: done
 priority: high
 created: 2026-05-28
-updated: 2026-05-29owner: bbaaxx
+updated: 2026-05-29
+owner: bbaaxx
 tags: [phase-1, resume, status, ux, workflow]
 related_wiki: [philosophy/core-principles, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
 depends_on: [upgrade-dispatch-memory-retrieval]
@@ -19,35 +20,35 @@ Create a resume-first cockpit experience so a fresh agent or human can quickly s
 - There is no first-class `mdocs_resume` tool or cockpit output.
 
 ## Plan
-- [ ] Baseline status behavior
-  - [ ] Read `src/plugin.ts`, `src/workflow.ts`, `src/initiative.ts`, `src/audit.ts`, and status-related tests
-  - [ ] Capture current `mdocs_status` fields in this initiative progress log
-- [ ] Add tests for enhanced status
-  - [ ] Update `src/__tests__/plugin.test.ts` to expect `mdocs_status` includes `nextAction`, `lastActivity`, and richer active initiative summaries
-  - [ ] Add tests for active initiative summaries including id, title, priority, current plan item, and updated date
-  - [ ] Add tests for stale state detection when workflow state references a missing or done initiative
-  - [ ] Run targeted tests and confirm they fail before implementation
-- [ ] Implement cockpit summary helpers
-  - [ ] Add helper functions in `src/plugin.ts` or a new focused module such as `src/status.ts`
-  - [ ] Compute current plan item from first `in-progress` or `pending` plan item
-  - [ ] Compute last activity from progress log and audit events
-  - [ ] Compute next action using workflow step and current plan item
-  - [ ] Detect stale workflow state when active initiative is missing, done, or inconsistent
-- [ ] Add `mdocs_resume` custom tool
-  - [ ] Return resumable initiatives ordered by active status, priority, updated date, and blockers
-  - [ ] Include recommendation: resume existing, create new, recover stale state, or review roadmap
-  - [ ] Include enough context for an agent to ask the user a precise resume question
-- [ ] Update docs and skills
-  - [ ] Update `README.md` custom tools section with `mdocs_resume` and enhanced `mdocs_status`
-  - [ ] Update `agents/mdocs-orchestrator.md` to prefer resume cockpit during DISCOVER/CONTEXT
-  - [ ] Update `skills/mdocs-workflow/SKILL.md` to mention resume-first flow
-- [ ] Verify
-  - [ ] Run `npm test -- src/__tests__/plugin.test.ts`
-  - [ ] Run `npm test`
-  - [ ] Run `npm run build`
-- [ ] Report
-  - [ ] Update this initiative progress log with changed files and test evidence
-  - [ ] Update roadmap wiki if UX semantics change
+- [x] Baseline status behavior
+  - [x] Read `src/plugin.ts`, `src/workflow.ts`, `src/initiative.ts`, `src/audit.ts`, and status-related tests
+  - [x] Capture current `mdocs_status` fields in this initiative progress log
+- [x] Add tests for enhanced status
+  - [x] Update `src/__tests__/plugin.test.ts` to expect `mdocs_status` includes `nextAction`, `lastActivity`, and richer active initiative summaries
+  - [x] Add tests for active initiative summaries including id, title, priority, current plan item, and updated date
+  - [x] Add tests for stale state detection when workflow state references a missing or done initiative
+  - [x] Run targeted tests and confirm they fail before implementation
+- [x] Implement cockpit summary helpers
+  - [x] Add helper functions in `src/plugin.ts` or a new focused module such as `src/status.ts`
+  - [x] Compute current plan item from first `in-progress` or `pending` plan item
+  - [x] Compute last activity from progress log and audit events
+  - [x] Compute next action using workflow step and current plan item
+  - [x] Detect stale workflow state when active initiative is missing, done, or inconsistent
+- [x] Add `mdocs_resume` custom tool
+  - [x] Return resumable initiatives ordered by active status, priority, updated date, and blockers
+  - [x] Include recommendation: resume existing, create new, recover stale state, or review roadmap
+  - [x] Include enough context for an agent to ask the user a precise resume question
+- [x] Update docs and skills
+  - [x] Update `README.md` custom tools section with `mdocs_resume` and enhanced `mdocs_status`
+  - [x] Update `agents/mdocs-orchestrator.md` to prefer resume cockpit during DISCOVER/CONTEXT
+  - [x] Update `skills/mdocs-workflow/SKILL.md` to mention resume-first flow
+- [x] Verify
+  - [x] Run `npm test -- src/__tests__/plugin.test.ts`
+  - [x] Run `npm test`
+  - [x] Run `npm run build`
+- [x] Report
+  - [x] Update this initiative progress log with changed files and test evidence
+  - [x] Update roadmap wiki if UX semantics change
 
 ## Acceptance Criteria
 - `mdocs_status` surfaces next action, last activity, current plan item, active/blocked/overdue summaries, and stale state warnings.

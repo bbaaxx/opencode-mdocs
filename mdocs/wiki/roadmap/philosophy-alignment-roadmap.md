@@ -6,6 +6,11 @@ created: 2026-05-28
 updated: 2026-05-28
 related_initiatives: [align-implementation-with-philosophy, define-v2-memory-metadata, upgrade-dispatch-memory-retrieval, add-resume-status-cockpit, add-cross-link-graph-linter]
 tags: [roadmap, philosophy, memory, distributed-agents, ux, architecture]
+lifecycle: stable
+knowledge_type: roadmap
+confidence: high
+source_initiatives: [align-implementation-with-philosophy, define-v2-memory-metadata, upgrade-dispatch-memory-retrieval, add-resume-status-cockpit, add-cross-link-graph-linter]
+supersedes: []
 ---
 
 # Philosophy Alignment Roadmap

@@ -21,33 +21,33 @@ Upgrade `mdocs_dispatch` from a thin concatenation of manually linked wiki entri
 - Search and audit already exist but are not included in dispatch context.
 
 ## Plan
-- [ ] Baseline current dispatch behavior
-  - [ ] Read `src/subagent.ts`, `src/plugin.ts`, `src/search.ts`, `src/audit.ts`, and `src/__tests__/subagent.test.ts`
-  - [ ] Document current dispatch output shape in this initiative progress log
-- [ ] Add tests for richer dispatch context
-  - [ ] Update `src/__tests__/subagent.test.ts` to expect structured sections for objective, plan, acceptance criteria, progress log, artifacts, related wiki, current step, and recommended next action
-  - [ ] Add or update plugin-level tests in `src/__tests__/plugin.test.ts` for `mdocs_dispatch` returning related memory count and context containing progress/audit-derived content
-  - [ ] Run targeted tests and confirm they fail before implementation
-- [ ] Implement structured context assembly
-  - [ ] Extend `SubagentAssembler.assemble()` or create a focused `ContextAssembler` in `src/subagent.ts`
-  - [ ] Include initiative acceptance criteria by parsing the `## Acceptance Criteria` section where available
-  - [ ] Include recent progress log entries and artifacts
-  - [ ] Include linked wiki entries with provenance headings
-  - [ ] Include a deterministic recommended next action based on the first in-progress or pending plan item
-- [ ] Use retrieval beyond manual links
-  - [ ] In `src/plugin.ts`, have `mdocs_dispatch` query `SearchEngine` using initiative title, objective, tags, and active plan text
-  - [ ] Include top related wiki/initiative results while avoiding duplicates from explicit links
-  - [ ] Preserve token budget by including titles/snippets/scores before full content
-- [ ] Integrate audit summary
-  - [ ] Include recent audit events for the initiative when available
-  - [ ] Keep output deterministic for tests by limiting and sorting events consistently
-- [ ] Verify
-  - [ ] Run `npm test -- src/__tests__/subagent.test.ts src/__tests__/plugin.test.ts`
-  - [ ] Run `npm test`
-  - [ ] Run `npm run build`
-- [ ] Report
-  - [ ] Update this initiative progress log with changed files and test evidence
-  - [ ] Add or update wiki notes if context assembly semantics become stable knowledge
+- [x] Baseline current dispatch behavior
+  - [x] Read `src/subagent.ts`, `src/plugin.ts`, `src/search.ts`, `src/audit.ts`, and `src/__tests__/subagent.test.ts`
+  - [x] Document current dispatch output shape in this initiative progress log
+- [x] Add tests for richer dispatch context
+  - [x] Update `src/__tests__/subagent.test.ts` to expect structured sections for objective, plan, acceptance criteria, progress log, artifacts, related wiki, current step, and recommended next action
+  - [x] Add or update plugin-level tests in `src/__tests__/plugin.test.ts` for `mdocs_dispatch` returning related memory count and context containing progress/audit-derived content
+  - [x] Run targeted tests and confirm they fail before implementation
+- [x] Implement structured context assembly
+  - [x] Extend `SubagentAssembler.assemble()` or create a focused `ContextAssembler` in `src/subagent.ts`
+  - [x] Include initiative acceptance criteria by parsing the `## Acceptance Criteria` section where available
+  - [x] Include recent progress log entries and artifacts
+  - [x] Include linked wiki entries with provenance headings
+  - [x] Include a deterministic recommended next action based on the first in-progress or pending plan item
+- [x] Use retrieval beyond manual links
+  - [x] In `src/plugin.ts`, have `mdocs_dispatch` query `SearchEngine` using initiative title, objective, tags, and active plan text
+  - [x] Include top related wiki/initiative results while avoiding duplicates from explicit links
+  - [x] Preserve token budget by including titles/snippets/scores before full content
+- [x] Integrate audit summary
+  - [x] Include recent audit events for the initiative when available
+  - [x] Keep output deterministic for tests by limiting and sorting events consistently
+- [x] Verify
+  - [x] Run `npm test -- src/__tests__/subagent.test.ts src/__tests__/plugin.test.ts`
+  - [x] Run `npm test`
+  - [x] Run `npm run build`
+- [x] Report
+  - [x] Update this initiative progress log with changed files and test evidence
+  - [x] Add or update wiki notes if context assembly semantics become stable knowledge
 
 ## Acceptance Criteria
 - `mdocs_dispatch` includes objective, plan, current step, acceptance criteria, progress, artifacts, related wiki, retrieved related memory, and recommended next action.
