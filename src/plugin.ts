@@ -150,12 +150,14 @@ export function createPlugin(baseDir: string) {
       });
 
       if (step !== 'IDLE' && activeInitiativeId) {
-        const fileName = `${activeInitiativeId}.md`;
-        const initiative = initiatives.read(fileName);
-        if (initiative) {
-          initiative.progressLog.push(`[${new Date().toISOString()}] ${toolName} executed at step ${step}`);
-          initiative.updated = new Date().toISOString().split('T')[0];
-          initiatives.update(fileName, initiative);
+        const fileName = findInitiativeFilename(activeInitiativeId);
+        if (fileName) {
+          const initiative = initiatives.read(fileName);
+          if (initiative) {
+            initiative.progressLog.push(`[${new Date().toISOString()}] ${toolName} executed at step ${step}`);
+            initiative.updated = new Date().toISOString().split('T')[0];
+            initiatives.update(fileName, initiative);
+          }
         }
       }
     },
@@ -177,12 +179,14 @@ export function createPlugin(baseDir: string) {
 
       if (significantEvents.includes(eventType)) {
         if (activeInitiativeId) {
-          const fileName = `${activeInitiativeId}.md`;
-          const initiative = initiatives.read(fileName);
-          if (initiative) {
-            initiative.progressLog.push(`[${new Date().toISOString()}] Event: ${eventType}`);
-            initiative.updated = new Date().toISOString().split('T')[0];
-            initiatives.update(fileName, initiative);
+          const fileName = findInitiativeFilename(activeInitiativeId);
+          if (fileName) {
+            const initiative = initiatives.read(fileName);
+            if (initiative) {
+              initiative.progressLog.push(`[${new Date().toISOString()}] Event: ${eventType}`);
+              initiative.updated = new Date().toISOString().split('T')[0];
+              initiatives.update(fileName, initiative);
+            }
           }
         }
       }

@@ -215,6 +215,72 @@ The active one
     expect(result.context).toContain('The active one');
   });
 
+  test('tool.execute.after logs progress to active initiative with dated filename', async () => {
+    const pluginInit = createPlugin(testDir);
+    (pluginInit as any).tool.mdocs_init.execute();
+
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'active-init',
+      title: 'Active Initiative',
+      status: 'active',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      owner: 'test',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Track hook progress',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    fs.writeFileSync(path.join(testDir, 'mdocs', '.workflow-state.json'), JSON.stringify({
+      currentStep: 'EXECUTE',
+      activeInitiative: 'active-init',
+      stepHistory: [{ step: 'EXECUTE', timestamp: new Date().toISOString() }]
+    }, null, 2), 'utf8');
+
+    const plugin = createPlugin(testDir) as any;
+    await plugin['tool.execute.after']({ name: 'bash', args: { command: 'npm test' } }, {});
+
+    const initiative = manager.read('active-init--2025-05-24.md');
+    expect(initiative?.progressLog.some(note => note.includes('bash executed at step EXECUTE'))).toBe(true);
+  });
+
+  test('event hook logs progress to active initiative with dated filename', () => {
+    const pluginInit = createPlugin(testDir);
+    (pluginInit as any).tool.mdocs_init.execute();
+
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'active-init',
+      title: 'Active Initiative',
+      status: 'active',
+      created: '2025-05-24',
+      updated: '2025-05-24',
+      owner: 'test',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Track event progress',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    fs.writeFileSync(path.join(testDir, 'mdocs', '.workflow-state.json'), JSON.stringify({
+      currentStep: 'VERIFY',
+      activeInitiative: 'active-init',
+      stepHistory: [{ step: 'VERIFY', timestamp: new Date().toISOString() }]
+    }, null, 2), 'utf8');
+
+    const plugin = createPlugin(testDir) as any;
+    plugin.event({ type: 'workflow.advance' });
+
+    const initiative = manager.read('active-init--2025-05-24.md');
+    expect(initiative?.progressLog.some(note => note.includes('Event: workflow.advance'))).toBe(true);
+  });
+
   test('mdocs_dispatch returns error when no initiativeId and no active initiative', async () => {
     const plugin = createPlugin(testDir);
     (plugin as any).tool.mdocs_init.execute();
