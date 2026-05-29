@@ -466,6 +466,38 @@ related_wiki: ["../secret/foo"]
     ]));
   });
 
+  test('preserves v2 initiative memory metadata and sections', () => {
+    const manager = new InitiativeManager(testDir);
+    const filePath = manager.create({
+      id: 'memory-metadata',
+      title: 'Memory Metadata',
+      status: 'active',
+      priority: 'high',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: ['memory'],
+      relatedWiki: [],
+      objective: 'Capture durable state for agent resume.',
+      plan: [{ description: 'Add metadata', status: 'pending' }],
+      progressLog: ['Created'],
+      artifacts: [],
+      phase: 'implementation',
+      handoffSummary: 'Metadata fields are ready for the next agent.',
+      openQuestions: ['Should lifecycle states be enforced?'],
+      blockers: ['Need graph validation'],
+      nextAction: 'Implement dispatch retrieval.'
+    });
+
+    const readBack = manager.read(path.basename(filePath));
+
+    expect(readBack?.phase).toBe('implementation');
+    expect(readBack?.handoffSummary).toContain('ready for the next agent');
+    expect(readBack?.openQuestions).toEqual(['Should lifecycle states be enforced?']);
+    expect(readBack?.blockers).toEqual(['Need graph validation']);
+    expect(readBack?.nextAction).toBe('Implement dispatch retrieval.');
+  });
+
   test('validate warns for non-string related_wiki entries instead of throwing', () => {
     const manager = new InitiativeManager(testDir);
     const initiativesDir = path.join(testDir, 'initiatives');

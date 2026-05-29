@@ -98,6 +98,11 @@ export class InitiativeManager {
     if (initiative.dependsOn && initiative.dependsOn.length > 0) {
       front.depends_on = initiative.dependsOn;
     }
+    if (initiative.phase) front.phase = initiative.phase;
+    if (initiative.handoffSummary) front.handoff_summary = initiative.handoffSummary;
+    if (initiative.openQuestions && initiative.openQuestions.length > 0) front.open_questions = initiative.openQuestions;
+    if (initiative.blockers && initiative.blockers.length > 0) front.blockers = initiative.blockers;
+    if (initiative.nextAction) front.next_action = initiative.nextAction;
     return `---\n${Object.entries(front).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n\n`;
   }
 
@@ -187,7 +192,12 @@ export class InitiativeManager {
       progressLog: parseListSection(body, 'Progress Log'),
       artifacts: parseListSection(body, 'Artifacts'),
       dueDate: front.due_date || undefined,
-      dependsOn: Array.isArray(front.depends_on) ? front.depends_on : undefined
+      dependsOn: Array.isArray(front.depends_on) ? front.depends_on : undefined,
+      phase: front.phase || undefined,
+      handoffSummary: front.handoff_summary || undefined,
+      openQuestions: Array.isArray(front.open_questions) ? front.open_questions : undefined,
+      blockers: Array.isArray(front.blockers) ? front.blockers : undefined,
+      nextAction: front.next_action || undefined
     };
   }
 

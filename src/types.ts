@@ -38,6 +38,11 @@ export interface Initiative {
   artifacts: string[];
   dueDate?: string;
   dependsOn?: string[];
+  phase?: 'discovery' | 'planning' | 'implementation' | 'verification' | 'done';
+  handoffSummary?: string;
+  openQuestions?: string[];
+  blockers?: string[];
+  nextAction?: string;
 }
 
 export interface WikiEntry {
@@ -49,6 +54,11 @@ export interface WikiEntry {
   relatedInitiatives: string[];
   tags: string[];
   content: string;
+  lifecycle?: 'draft' | 'stable' | 'superseded' | 'needs-review';
+  knowledgeType?: 'architecture' | 'decision' | 'how-to' | 'reference' | 'roadmap' | 'note';
+  confidence?: 'low' | 'medium' | 'high';
+  sourceInitiatives?: string[];
+  supersedes?: string[];
 }
 
 export interface WorkflowState {

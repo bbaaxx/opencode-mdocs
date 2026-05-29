@@ -306,4 +306,30 @@ related_wiki: ["architecture/referenced"]
       expect.stringContaining('architecture/referenced.md is not referenced by any initiative')
     ]));
   });
+
+  test('preserves v2 wiki lifecycle and provenance metadata', () => {
+    const manager = new WikiManager(testDir);
+    const filePath = manager.create({
+      id: 'dispatch-memory',
+      title: 'Dispatch Memory',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: ['upgrade-dispatch-memory-retrieval'],
+      tags: ['memory'],
+      content: 'Dispatch should behave like memory retrieval.',
+      lifecycle: 'stable',
+      knowledgeType: 'architecture',
+      confidence: 'high',
+      sourceInitiatives: ['align-implementation-with-philosophy'],
+      supersedes: []
+    });
+
+    const readBack = manager.read('architecture', path.basename(filePath, '.md'));
+
+    expect(readBack?.lifecycle).toBe('stable');
+    expect(readBack?.knowledgeType).toBe('architecture');
+    expect(readBack?.confidence).toBe('high');
+    expect(readBack?.sourceInitiatives).toEqual(['align-implementation-with-philosophy']);
+  });
 });
