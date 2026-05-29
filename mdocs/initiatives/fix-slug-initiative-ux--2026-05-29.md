@@ -56,6 +56,7 @@ Fix three UX issues that cause agents to misresolve initiative filenames:
 - [2026-05-29] Created initiative from agent feedback: slug/id mismatch, INDEX hides filename, no lookup tool.
 - [2026-05-29] Read `src/initiative.ts` to understand `formatFileName` and `slugify` implementation.
 - [2026-05-29] Will run stress-test scenarios to confirm exact failure modes before TDD implementation.
+- [2026-05-29] Added `mdocs_lookup` usage guidance to `skills/mdocs-initiative/SKILL.md` after review noted the documentation acceptance criterion was still open.
 - [2026-05-29] Task 1 RED: `npm test -- src/__tests__/plugin.test.ts` failed for id-stem filename creation, missing `mdocs_lookup`, and missing tool registration.
 - [2026-05-29] Task 1 GREEN: `npm test -- src/__tests__/plugin.test.ts` passed 14 tests; `npm test` passed 92 tests across 11 suites; `npm run build` passed.
 - [2026-05-29] Task 1 follow-up RED: `npm test -- src/__tests__/plugin.test.ts` failed for missing `field: 'slug'` lookup behavior, missing lookup metadata, missing partial-title match, and recomputed INDEX filenames for legacy files.
