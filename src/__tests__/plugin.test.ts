@@ -222,6 +222,33 @@ The active one
 
     expect(result.error).toBe('No initiativeId provided and no active initiative');
   });
+
+  test('config-created initiative uses the id stem for its filename and index entry', () => {
+    const plugin = createPlugin(testDir);
+    const today = new Date().toISOString().split('T')[0];
+
+    plugin.config({});
+
+    const expectedFileName = `install-mdocs--${today}.md`;
+    const initiativePath = path.join(testDir, 'mdocs', 'initiatives', expectedFileName);
+    const indexPath = path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md');
+    expect(fs.existsSync(initiativePath)).toBe(true);
+    expect(fs.readFileSync(indexPath, 'utf8')).toContain(expectedFileName);
+  });
+
+  test('mdocs_lookup resolves initiative id and title to the actual filename', async () => {
+    const plugin = createPlugin(testDir);
+    const today = new Date().toISOString().split('T')[0];
+    plugin.config({});
+
+    const byId = await (plugin as any).tool.mdocs_lookup.execute({ query: 'install-mdocs', field: 'id' });
+    const byTitle = await (plugin as any).tool.mdocs_lookup.execute({ query: 'Install and Configure opencode-mdocs', field: 'title' });
+
+    expect(byId.error).toBeUndefined();
+    expect(byTitle.error).toBeUndefined();
+    expect(byId.filename).toBe(`install-mdocs--${today}.md`);
+    expect(byTitle.filename).toBe(`install-mdocs--${today}.md`);
+  });
 });
 
 describe('Config Hook', () => {
@@ -321,6 +348,7 @@ describe('Config Hook', () => {
       'mdocs_audit',
       'mdocs_dispatch',
       'mdocs_init',
+      'mdocs_lookup',
       'mdocs_search',
       'mdocs_status'
     ]);

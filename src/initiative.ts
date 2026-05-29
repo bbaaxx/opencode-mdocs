@@ -60,7 +60,8 @@ export class InitiativeManager {
   }
 
   private formatFileName(initiative: Initiative): string {
-    const slug = this.slugify(initiative.title);
+    const idSlug = this.slugify(initiative.id || '');
+    const slug = idSlug || this.slugify(initiative.title);
     return `${slug}--${initiative.created}.md`;
   }
 
@@ -283,7 +284,7 @@ export class InitiativeManager {
         // Skip malformed files
       }
     }
-    const lines = initiatives.map(i => `- **${i.title}** (${i.status}) — ${i.created} — [${i.tags.join(', ')}]`);
+    const lines = initiatives.map(i => `- **${i.title}** (${i.status}) — ${this.formatFileName(i)} — ${i.created} — [${i.tags.join(', ')}]`);
     const index = `# Initiatives\n\n${lines.join('\n') || 'No initiatives yet.'}`;
     fs.writeFileSync(path.join(this.dir, 'INDEX.md'), index, 'utf8');
   }

@@ -14,6 +14,10 @@ function loadAgentPrompt(agentPath: string) {
   return content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim();
 }
 
+function slugify(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export function createPlugin(baseDir: string) {
   const mdocsRoot = path.join(baseDir, 'mdocs');
   const mdocs = new MdocsManager(mdocsRoot);
@@ -219,6 +223,51 @@ export function createPlugin(baseDir: string) {
               score: r.score
             }))
           };
+        }
+      },
+      mdocs_lookup: {
+        description: "Resolve an initiative by id, title, slug, or filename",
+        execute: async (args: { query: string; field?: 'id' | 'title' | 'filename' }) => {
+          try {
+            const query = args?.query || '';
+            const querySlug = slugify(query);
+            const initiativesDir = path.join(mdocsRoot, 'initiatives');
+            const files = fs.existsSync(initiativesDir)
+              ? fs.readdirSync(initiativesDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md')
+              : [];
+
+            for (const fileName of files) {
+              const initiative = initiatives.read(fileName);
+              if (!initiative) continue;
+
+              const fileStem = fileName.replace(/\.md$/, '');
+              const fileSlug = slugify(fileStem.replace(/--\d{4}-\d{2}-\d{2}$/, ''));
+              const idSlug = slugify(initiative.id || '');
+              const titleSlug = slugify(initiative.title || '');
+              const candidates: Record<string, boolean> = {
+                id: initiative.id === query || idSlug === querySlug,
+                title: initiative.title === query || titleSlug === querySlug,
+                filename: fileName === query || fileStem === query || fileSlug === querySlug
+              };
+
+              const matched = args?.field
+                ? candidates[args.field]
+                : candidates.id || candidates.title || candidates.filename;
+
+              if (matched) {
+                return {
+                  type: 'initiative',
+                  id: initiative.id,
+                  title: initiative.title,
+                  filename: fileName
+                };
+              }
+            }
+
+            return { error: 'Initiative not found' };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       },
       mdocs_dispatch: {

@@ -41,9 +41,9 @@ describe('InitiativeManager', () => {
     const files = fs.readdirSync(testDir);
     expect(files).toContain('initiatives');
     const initiativeFiles = fs.readdirSync(path.join(testDir, 'initiatives'));
-    expect(initiativeFiles).toContain('test-initiative--2025-05-24.md');
+    expect(initiativeFiles).toContain('test-init--2025-05-24.md');
 
-    const fileContent = fs.readFileSync(path.join(testDir, 'initiatives', 'test-initiative--2025-05-24.md'), 'utf8');
+    const fileContent = fs.readFileSync(path.join(testDir, 'initiatives', 'test-init--2025-05-24.md'), 'utf8');
     expect(fileContent).toContain('---');
     expect(fileContent).toContain('title: "Test Initiative"');
     expect(fileContent).toContain('## Objective');
@@ -69,7 +69,7 @@ describe('InitiativeManager', () => {
     };
 
     manager.create(initiative);
-    const read = manager.read('test-initiative--2025-05-24.md');
+    const read = manager.read('test-init--2025-05-24.md');
     
     expect(read).not.toBeNull();
     expect(read!.id).toBe('test-init');
@@ -131,13 +131,13 @@ describe('InitiativeManager', () => {
     manager.create(initiative);
     
     const updated = { ...initiative, objective: 'Updated' };
-    manager.update('test-initiative--2025-05-24.md', updated);
+    manager.update('test-init--2025-05-24.md', updated);
     
-    const read = manager.read('test-initiative--2025-05-24.md');
+    const read = manager.read('test-init--2025-05-24.md');
     expect(read!.objective).toBe('Updated');
   });
 
-  test('update with title change deletes old file', () => {
+  test('update with title change keeps id-based file', () => {
     const manager = new InitiativeManager(testDir);
     const initiative: Initiative = {
       id: 'test-init',
@@ -156,12 +156,12 @@ describe('InitiativeManager', () => {
 
     manager.create(initiative);
     const updated = { ...initiative, title: 'New Title' };
-    manager.update('old-title--2025-05-24.md', updated);
+    manager.update('test-init--2025-05-24.md', updated);
 
-    const oldExists = fs.existsSync(path.join(testDir, 'initiatives', 'old-title--2025-05-24.md'));
-    const newExists = fs.existsSync(path.join(testDir, 'initiatives', 'new-title--2025-05-24.md'));
-    expect(oldExists).toBe(false);
-    expect(newExists).toBe(true);
+    const idBasedExists = fs.existsSync(path.join(testDir, 'initiatives', 'test-init--2025-05-24.md'));
+    const titleBasedExists = fs.existsSync(path.join(testDir, 'initiatives', 'new-title--2025-05-24.md'));
+    expect(idBasedExists).toBe(true);
+    expect(titleBasedExists).toBe(false);
   });
 
   test('delete initiative removes file and updates index', () => {
@@ -182,10 +182,10 @@ describe('InitiativeManager', () => {
     };
 
     manager.create(initiative);
-    manager.delete('test-initiative--2025-05-24.md');
+    manager.delete('test-init--2025-05-24.md');
     
     const files = fs.readdirSync(path.join(testDir, 'initiatives'));
-    expect(files).not.toContain('test-initiative--2025-05-24.md');
+    expect(files).not.toContain('test-init--2025-05-24.md');
   });
 
   test('index is generated', () => {
