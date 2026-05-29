@@ -62,6 +62,8 @@ Add integrity validation to prevent silent data corruption in initiatives and wi
 - [2026-05-29] Will implement TDD: write failing tests first.
 - [2026-05-29] RED: `npm test -- src/__tests__/initiative.test.ts src/__tests__/wiki.test.ts src/__tests__/plugin.test.ts` failed because `InitiativeManager.validate`, `WikiManager.validate`, and `mdocs_validate` were missing, and `mdocs_status` lacked validation output.
 - [2026-05-29] GREEN focused: `npm test -- src/__tests__/initiative.test.ts src/__tests__/wiki.test.ts src/__tests__/plugin.test.ts` passed after adding validation and duplicate-id guards.
+- [2026-05-29] Review RED: `npm test -- src/__tests__/initiative.test.ts src/__tests__/plugin.test.ts` failed because unsafe `related_wiki` references reported as missing entries instead of unsafe refs; malformed status regression already passed.
+- [2026-05-29] Review GREEN focused: `npm test -- src/__tests__/initiative.test.ts src/__tests__/plugin.test.ts` passed after rejecting unsafe wiki path segments before filesystem checks.
 
 ## Artifacts
 - `mdocs/initiatives/add-initiatives-wiki-validation--2026-05-29.md` — this initiative

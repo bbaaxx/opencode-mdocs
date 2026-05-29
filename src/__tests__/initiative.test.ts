@@ -433,4 +433,35 @@ related_wiki: ["architecture/missing"]
     manager.create(other);
     expect(() => manager.update('other--2026-05-31.md', { ...other, id: 'shared' })).toThrow('Duplicate initiative id "shared"');
   });
+
+  test('validate rejects unsafe related_wiki path segments without resolving outside wiki root', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    const escapedSecretDir = path.join(testDir, 'secret');
+    fs.mkdirSync(escapedSecretDir, { recursive: true });
+    fs.writeFileSync(path.join(escapedSecretDir, 'foo.md'), 'outside wiki root', 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'unsafe-wiki--2026-05-29.md'), `---
+id: "unsafe-wiki"
+title: "Unsafe Wiki"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["../secret/foo"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('unsafe-wiki--2026-05-29.md has unsafe wiki reference: ../secret/foo')
+    ]));
+  });
 });

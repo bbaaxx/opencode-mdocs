@@ -595,6 +595,21 @@ related_wiki: []
     expect(result.validation.initiatives.errors).toEqual(expect.arrayContaining([expect.stringContaining('missing-title.md missing title')]));
   });
 
+  test('mdocs_status returns validation when an initiative file is malformed', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initiativeDir, 'malformed.md'), 'not frontmatter', 'utf8');
+
+    const result = await (plugin as any).tool.mdocs_status.execute();
+
+    expect(result.error).toBeUndefined();
+    expect(result.validation.valid).toBe(false);
+    expect(result.validation.initiatives.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('malformed.md invalid initiative format')
+    ]));
+  });
+
   test('mdocs returns helpful errors for invalid and unsupported commands', async () => {
     const plugin = createPlugin(testDir);
     (plugin as any).tool.mdocs_init.execute();

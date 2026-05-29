@@ -47,6 +47,10 @@ function parsePlanSection(content: string): { description: string; status: PlanI
     .map(line => parsePlanItem(line));
 }
 
+function isSafePathSegment(segment: string): boolean {
+  return !!segment && segment !== '.' && segment !== '..' && path.basename(segment) === segment;
+}
+
 export class InitiativeManager {
   private dir: string;
 
@@ -332,7 +336,9 @@ export class InitiativeManager {
 
       for (const ref of initiative.relatedWiki || []) {
         const [category, id, ...rest] = ref.split('/');
-        if (!category || !id || rest.length > 0 || !fs.existsSync(path.join(wikiRoot, category, `${id}.md`))) {
+        if (!isSafePathSegment(category) || !isSafePathSegment(id) || rest.length > 0) {
+          errors.push(`${fileName} has unsafe wiki reference: ${ref}`);
+        } else if (!fs.existsSync(path.join(wikiRoot, category, `${id}.md`))) {
           errors.push(`${fileName} references missing wiki entry: ${ref}`);
         }
       }
