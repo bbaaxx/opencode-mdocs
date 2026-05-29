@@ -386,6 +386,178 @@ Legacy filename
     expect(index).toContain('install-and-configure-opencode-mdocs--2026-05-27.md');
     expect(index).not.toContain('install-mdocs--2026-05-27.md');
   });
+
+  test('mdocs initiative.create creates an active initiative with pending plan items', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const today = new Date().toISOString().split('T')[0];
+
+    const result = await (plugin as any).tool.mdocs.execute({
+      command: 'initiative.create',
+      args: {
+        title: 'Command Created Initiative',
+        id: 'cmd-created',
+        owner: 'agent',
+        tags: ['cli'],
+        relatedWiki: ['developer/commands'],
+        objective: 'Create initiatives from a command',
+        plan: ['Write tests', { description: 'Implement command', status: 'done' }]
+      }
+    });
+
+    expect(result).toEqual({ success: true, filename: `cmd-created--${today}.md`, id: 'cmd-created' });
+
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    const initiative = manager.read(result.filename);
+    expect(initiative).toMatchObject({
+      id: 'cmd-created',
+      title: 'Command Created Initiative',
+      status: 'active',
+      owner: 'agent',
+      tags: ['cli'],
+      relatedWiki: ['developer/commands'],
+      objective: 'Create initiatives from a command'
+    });
+    expect(initiative?.created).toBe(today);
+    expect(initiative?.updated).toBe(today);
+    expect(initiative?.plan).toEqual([
+      { description: 'Write tests', status: 'pending' },
+      { description: 'Implement command', status: 'pending' }
+    ]);
+    expect(initiative?.progressLog[0]).toContain('Created initiative via mdocs command');
+  });
+
+  test('mdocs initiative.update resolves existing filename and appends progress note', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    const legacyPath = path.join(testDir, 'mdocs', 'initiatives', 'legacy-title--2026-05-27.md');
+    fs.writeFileSync(
+      legacyPath,
+      `---
+id: "stable-id"
+title: "Stable Title"
+status: "active"
+created: "2026-05-27"
+updated: "2026-05-27"
+owner: "old-owner"
+tags: ["old"]
+related_wiki: []
+---
+
+## Objective
+Existing file
+
+## Plan
+
+## Progress Log
+- Existing note
+
+## Artifacts
+`,
+      'utf8'
+    );
+
+    const result = await (plugin as any).tool.mdocs.execute({
+      command: 'initiative.update',
+      args: {
+        id: 'stable-id',
+        updates: {
+          status: 'paused',
+          tags: ['new'],
+          priority: 'high',
+          dueDate: '2026-06-01',
+          dependsOn: ['dependency'],
+          owner: 'new-owner'
+        },
+        progressNote: 'Paused while dependency finishes'
+      }
+    });
+
+    expect(result).toEqual({ success: true, filename: 'stable-id--2026-05-27.md', id: 'stable-id' });
+    expect(fs.existsSync(legacyPath)).toBe(false);
+
+    const updated = manager.read('stable-id--2026-05-27.md');
+    expect(updated).toMatchObject({
+      id: 'stable-id',
+      status: 'paused',
+      tags: ['new'],
+      priority: 'high',
+      dueDate: '2026-06-01',
+      dependsOn: ['dependency'],
+      owner: 'new-owner'
+    });
+    expect(updated?.progressLog).toContain('Existing note');
+    expect(updated?.progressLog).toContain('Paused while dependency finishes');
+  });
+
+  test('mdocs initiative.done resolves existing filename and marks initiative done', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'finish-me',
+      title: 'Finish Me',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Complete this',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    const result = await (plugin as any).tool.mdocs.execute({ command: 'initiative.done', args: { id: 'finish-me' } });
+
+    expect(result).toEqual({ success: true, filename: 'finish-me--2026-05-29.md', id: 'finish-me' });
+    const initiative = manager.read('finish-me--2026-05-29.md');
+    expect(initiative?.status).toBe('done');
+    expect(initiative?.progressLog.some(note => note.includes('Marked done via mdocs command'))).toBe(true);
+  });
+
+  test('mdocs wiki.create creates a wiki entry and indices', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const today = new Date().toISOString().split('T')[0];
+
+    const result = await (plugin as any).tool.mdocs.execute({
+      command: 'wiki.create',
+      args: {
+        category: 'developer',
+        id: 'command-tool',
+        title: 'Command Tool',
+        content: 'Use the mdocs command tool.',
+        relatedInitiatives: ['cmd-created'],
+        tags: ['cli']
+      }
+    });
+
+    expect(result).toEqual({ success: true, filename: 'developer/command-tool.md', id: 'command-tool' });
+    const entry = fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'command-tool.md'), 'utf8');
+    expect(entry).toContain('title: "Command Tool"');
+    expect(entry).toContain(`created: "${today}"`);
+    expect(entry).toContain('Use the mdocs command tool.');
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), 'utf8')).toContain('Command Tool');
+  });
+
+  test('mdocs returns helpful errors for invalid and unsupported commands', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.create', args: {} })).resolves.toEqual({ error: 'initiative.create requires title' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.update', args: {} })).resolves.toEqual({ error: 'initiative.update requires id' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.done', args: { id: 'missing' } })).resolves.toEqual({ error: 'Initiative not found: missing' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'developer', id: 'missing-title' } })).resolves.toEqual({ error: 'wiki.create requires category, id, and title' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'validate', args: {} })).resolves.toEqual({ error: 'validate not yet implemented' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'index.sync', args: {} })).resolves.toEqual({ error: 'index.sync not yet implemented' });
+
+    const unknown = await (plugin as any).tool.mdocs.execute({ command: 'nope', args: {} });
+    expect(unknown.error).toContain('Unsupported mdocs command: nope');
+    expect(unknown.supportedCommands).toContain('initiative.create');
+  });
 });
 
 describe('Config Hook', () => {
@@ -482,6 +654,7 @@ describe('Config Hook', () => {
     const plugin = createPlugin(testDir) as any;
 
     expect(Object.keys(plugin.tool).sort()).toEqual([
+      'mdocs',
       'mdocs_audit',
       'mdocs_dispatch',
       'mdocs_init',
