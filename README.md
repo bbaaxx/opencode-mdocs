@@ -69,7 +69,7 @@ That's it — the plugin auto-registers the agent and skills paths on startup.
 
 On first load, the plugin automatically:
 
-1. Creates `/mdocs/` directory structure in your project root
+1. Creates `./mdocs/` directory structure in your project root
 2. Creates the first initiative tracking the plugin's own installation
 3. Initializes index files for navigation
 
@@ -92,7 +92,7 @@ IDLE → UNDERSTAND → DISCOVER → CONTEXT → PLAN → EXECUTE → VERIFY →
 |------|-------------|------------|
 | **IDLE** | Waiting for a task. All tools allowed (opt-in). | No restrictions |
 | **UNDERSTAND** | Clarify the request with the user | Read only |
-| **DISCOVER** | Check for related initiatives in `/mdocs/initiatives/` | Read only |
+| **DISCOVER** | Check for related initiatives in `./mdocs/initiatives/` | Read only |
 | **CONTEXT** | Read initiative + related wiki entries | Read only |
 | **PLAN** | Write implementation plan to initiative | Read + Write allowed |
 | **EXECUTE** | Dispatch subagents with assembled context | Read + Write allowed |
@@ -113,7 +113,7 @@ IDLE → UNDERSTAND → DISCOVER → CONTEXT → PLAN → EXECUTE → VERIFY →
 
 Persistent task files that track work across sessions:
 
-**Location:** `/mdocs/initiatives/`
+**Location:** `./mdocs/initiatives/`
 
 **Filename format:** `<slug>--<YYYY-MM-DD>.md`
 
@@ -159,11 +159,11 @@ Add JWT-based authentication to the API.
 
 Structured knowledge that persists across conversations:
 
-**Location:** `/mdocs/wiki/<category>/`
+**Location:** `./mdocs/wiki/<category>/`
 
 **Structure:**
 ```
-/mdocs/wiki/
+./mdocs/wiki/
 ├── INDEX.md
 ├── architecture/
 │   ├── INDEX.md
@@ -195,9 +195,9 @@ The plugin follows a plugin-centric architecture...
 ### Indices
 
 All indices are auto-generated:
-- `/mdocs/initiatives/INDEX.md` — lists all initiatives with status and tags
-- `/mdocs/wiki/INDEX.md` — categorized list of wiki entries
-- `/mdocs/wiki/<category>/INDEX.md` — per-category entry list
+- `./mdocs/initiatives/INDEX.md` — lists all initiatives with status and tags
+- `./mdocs/wiki/INDEX.md` — categorized list of wiki entries
+- `./mdocs/wiki/<category>/INDEX.md` — per-category entry list
 
 ## Usage
 
@@ -322,6 +322,6 @@ This project uses the mdocs workflow — all contributions should follow the 9-s
 
 - **Restart opencode after config changes** — the plugin loads config once at startup
 - **Workflow is opt-in** — if no active initiative exists, all tools work normally
-- **State persists** — workflow state is saved to `/mdocs/.workflow-state.json`
+- **State persists** — workflow state is saved to `./mdocs/.workflow-state.json`
 - **Initiatives are human-friendly** — file names include descriptive slugs and dates
-- **Audit log** — all tool calls and significant events are written to `/mdocs/audit.log` in NDJSON format; rotates automatically at 10MB
+- **Audit log** — all tool calls and significant events are written to `./mdocs/audit.log` in NDJSON format; rotates automatically at 10MB

@@ -7,7 +7,7 @@ description: Use when creating, updating, or querying initiatives. Triggers on "
 
 ## File Format
 
-Initiatives live in `/mdocs/initiatives/`.
+Initiatives live in `./mdocs/initiatives/`.
 
 **Filename:** `<slug>--<YYYY-MM-DD>.md`
 
@@ -33,5 +33,5 @@ related_wiki: [architecture/plugin-design]
 
 - **Create:** Write a new markdown file with frontmatter + sections (Objective, Plan, Progress Log, Artifacts)
 - **Update:** Edit existing file, update `updated` date, append to Progress Log
-- **Search:** Look in `/mdocs/initiatives/INDEX.md` or scan files for tag matches
+- **Search:** Look in `./mdocs/initiatives/INDEX.md` or scan files for tag matches
 - **Link wiki:** Add `related_wiki` entries to connect knowledge
