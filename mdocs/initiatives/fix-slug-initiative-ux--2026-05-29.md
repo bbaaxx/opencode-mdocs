@@ -60,6 +60,7 @@ Fix three UX issues that cause agents to misresolve initiative filenames:
 - [2026-05-29] Task 1 GREEN: `npm test -- src/__tests__/plugin.test.ts` passed 14 tests; `npm test` passed 92 tests across 11 suites; `npm run build` passed.
 - [2026-05-29] Task 1 follow-up RED: `npm test -- src/__tests__/plugin.test.ts` failed for missing `field: 'slug'` lookup behavior, missing lookup metadata, missing partial-title match, and recomputed INDEX filenames for legacy files.
 - [2026-05-29] Task 1 follow-up GREEN: `npm test -- src/__tests__/plugin.test.ts` passed 16 tests; `npm test` passed 94 tests across 11 suites; `npm run build` passed.
+- [2026-05-29] Task 1 lookup coverage RED/GREEN: omitted-field slug lookup passed immediately as coverage; no-match error shape failed until `mdocs_lookup` returned `{ error: 'No initiatives found for query', query }`. `npm test -- src/__tests__/plugin.test.ts` passed 18 tests; `npm test` passed 96 tests across 11 suites; `npm run build` passed.
 
 ## Artifacts
 - `mdocs/initiatives/fix-slug-initiative-ux--2026-05-29.md` — this initiative

@@ -294,6 +294,49 @@ Legacy filename
     expect(byPartialTitle.filename).toBe('install-and-configure-opencode-mdocs--2026-05-27.md');
   });
 
+  test('mdocs_lookup default lookup resolves omitted-field slug queries', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(
+      path.join(initiativeDir, 'install-and-configure-opencode-mdocs--2026-05-27.md'),
+      `---
+id: "install-mdocs"
+title: "Install and Configure opencode-mdocs"
+status: "done"
+created: "2026-05-27"
+updated: "2026-05-27"
+owner: "system"
+tags: ["setup", "plugin"]
+related_wiki: []
+---
+
+## Objective
+Legacy filename
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`,
+      'utf8'
+    );
+
+    const result = await (plugin as any).tool.mdocs_lookup.execute({ query: 'install-and-configure-opencode-mdocs' });
+
+    expect(result.filename).toBe('install-and-configure-opencode-mdocs--2026-05-27.md');
+  });
+
+  test('mdocs_lookup returns query with no-match error', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+
+    const result = await (plugin as any).tool.mdocs_lookup.execute({ query: 'missing-initiative' });
+
+    expect(result).toEqual({ error: 'No initiatives found for query', query: 'missing-initiative' });
+  });
+
   test('initiative index displays actual filename from disk for mismatched legacy files', () => {
     const plugin = createPlugin(testDir);
     (plugin as any).tool.mdocs_init.execute();

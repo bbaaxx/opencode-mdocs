@@ -268,7 +268,7 @@ export function createPlugin(baseDir: string) {
               }
             }
 
-            return { error: 'Initiative not found' };
+            return { error: 'No initiatives found for query', query };
           } catch (err: any) {
             return { error: err.message || String(err) };
           }
