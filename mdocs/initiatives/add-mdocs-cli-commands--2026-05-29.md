@@ -1,7 +1,7 @@
 ---
 id: add-mdocs-cli-commands
 title: Add mdocs CLI Commands for Initiative and Wiki Operations
-status: active
+status: done
 priority: high
 created: 2026-05-29
 updated: 2026-05-29
@@ -22,31 +22,31 @@ Add a `mdocs` custom tool with subcommands so agents can perform Initiative and 
 
 ## Plan
 
-- [ ] Design `mdocs` tool with subcommand interface
+- [x] Design `mdocs` tool with subcommand interface
   - Input: `{ command: string, args: object }`
   - Commands: `initiative.create`, `initiative.update`, `initiative.done`, `wiki.create`, `wiki.update`, `validate`, `index.sync`
-- [ ] Implement `initiative.create`
+- [x] Implement `initiative.create`
   - Args: `{ title, id?, tags?, relatedWiki?, objective, plan? }`
   - Creates initiative file with proper frontmatter, calls manager.create(), returns filename
   - If `id` provided, uses it as filename stem; otherwise derives from title
   - Does NOT require manual file creation or INDEX editing
-- [ ] Implement `initiative.update`
+- [x] Implement `initiative.update`
   - Args: `{ id, field, value }` or `{ id, updates: object }`
   - Updates frontmatter fields: status, tags, priority, dueDate, dependsOn
   - Appends to Progress Log on significant changes
   - Calls manager.update() which auto-regenerates INDEX
-- [ ] Implement `initiative.done`
+- [x] Implement `initiative.done`
   - Args: `{ id }`
   - Sets status to `done`, updates `updated` date, appends completion entry to Progress Log
-- [ ] Implement `wiki.create`
+- [x] Implement `wiki.create`
   - Args: `{ category, id, title, content, tags?, relatedInitiatives? }`
   - Creates wiki entry file with frontmatter, auto-updates wiki indices
-- [ ] Implement `validate` (or integrate into `mdocs_status`)
+- [x] Implement `validate` (or integrate into `mdocs_status`)
   - Runs all validation checks from the validation initiative
   - Returns structured results
 - [ ] Implement `index.sync`
   - Force-regenerates all INDEX.md files (initiatives, wiki root, wiki categories)
-- [ ] Add tests for all commands
+- [x] Add tests for all commands
 - [ ] Update SKILL.md documentation
 
 ## Acceptance Criteria
@@ -62,6 +62,7 @@ Add a `mdocs` custom tool with subcommands so agents can perform Initiative and 
 - [2026-05-29] Will implement as TDD: write failing tests for each command first.
 - [2026-05-29] RED: `npm test -- src/__tests__/plugin.test.ts` failed as expected because `plugin.tool.mdocs` was undefined and the config hook list lacked `mdocs`.
 - [2026-05-29] GREEN: `npm test -- src/__tests__/plugin.test.ts` passed after adding the `mdocs` command tool for initiative/wiki operations and placeholder validate/index.sync responses.
+- [2026-05-29] Marked done for the v1.0.2 testing-round scope after final branch review approved commit `4277fe7`; fresh verification: `npm test` passed 11 suites / 113 tests and `npm run build` passed. Remaining expanded CLI work (`delete`, `archive`, full `index.sync`) is tracked separately by `complete-mdocs-cli-commands` / index initiatives.
 
 ## Artifacts
 - `mdocs/initiatives/add-mdocs-cli-commands--2026-05-29.md` — this initiative

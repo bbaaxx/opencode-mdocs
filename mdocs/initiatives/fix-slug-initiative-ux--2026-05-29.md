@@ -1,7 +1,7 @@
 ---
 id: fix-slug-initiative-ux
 title: Fix Initiative Filename/Slug UX Issues
-status: active
+status: done
 priority: high
 created: 2026-05-29
 updated: 2026-05-29
@@ -27,21 +27,21 @@ Fix three UX issues that cause agents to misresolve initiative filenames:
 
 ## Plan
 
-- [ ] Write stress-test scenarios covering: create initiative, read by id, read by title, update progress, search
+- [x] Write stress-test scenarios covering: create initiative, read by id, read by title, update progress, search
   - Confirm exact failure modes before writing any fix code
-- [ ] Add `mdocs_lookup` custom tool
+- [x] Add `mdocs_lookup` custom tool
   - Input: `{ query: string, field?: 'id' | 'title' | 'slug' }`
   - Searches by id, title, or filename slug
   - Returns: `{ filename, id, title, status, tags }` for each match
   - If no matches, returns `{ error: 'No initiatives found for query' }`
-- [ ] Fix `formatFileName` to use `id` field directly when available, falling back to slugified title
+- [x] Fix `formatFileName` to use `id` field directly when available, falling back to slugified title
   - Only use `id` as filename stem when `id` is set and non-empty
   - Fall back to `slugify(title)` when `id` is absent or equals a generic placeholder
-- [ ] Update INDEX generation to show filename alongside title
+- [x] Update INDEX generation to show filename alongside title
   - Display: `**Title** (`filename`) — status — date — [tags]`
   - Example: `**Install and Configure opencode-mdocs** (install-and-configure-opencode-mdocs--2026-05-27.md)`
-- [ ] Add regression tests covering slug/id/filename resolution
-- [ ] Update `mdocs-initiative` SKILL.md with lookup command usage
+- [x] Add regression tests covering slug/id/filename resolution
+- [x] Update `mdocs-initiative` SKILL.md with lookup command usage
 
 ## Acceptance Criteria
 
@@ -63,6 +63,7 @@ Fix three UX issues that cause agents to misresolve initiative filenames:
 - [2026-05-29] Task 1 follow-up GREEN: `npm test -- src/__tests__/plugin.test.ts` passed 16 tests; `npm test` passed 94 tests across 11 suites; `npm run build` passed.
 - [2026-05-29] Task 1 lookup coverage RED/GREEN: omitted-field slug lookup passed immediately as coverage; no-match error shape failed until `mdocs_lookup` returned `{ error: 'No initiatives found for query', query }`. `npm test -- src/__tests__/plugin.test.ts` passed 18 tests; `npm test` passed 96 tests across 11 suites; `npm run build` passed.
 - [2026-05-29] Final review fix RED/GREEN: hook regression tests failed because `tool.execute.after` and `event` looked for `active-init.md`; switched both to resolve active initiative id via actual filename. Focused tests passed 2 tests; `npm test` passed 113 tests across 11 suites; `npm run build` passed.
+- [2026-05-29] Marked done after final branch review approved commit `4277fe7`; fresh verification: `npm test` passed 11 suites / 113 tests and `npm run build` passed.
 
 ## Artifacts
 - `mdocs/initiatives/fix-slug-initiative-ux--2026-05-29.md` — this initiative
