@@ -543,6 +543,58 @@ Existing file
     expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), 'utf8')).toContain('Command Tool');
   });
 
+  test('mdocs_validate tool and mdocs validate command return combined validation results', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initiativeDir, 'broken--2026-05-29.md'), `---
+id: "broken"
+title: "Broken"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["developer/missing"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+    const wikiDir = path.join(testDir, 'mdocs', 'wiki', 'developer');
+    fs.mkdirSync(wikiDir, { recursive: true });
+    fs.writeFileSync(path.join(wikiDir, 'bad.md'), '---\nid: ""\ntitle: ""\ncategory: ""\n---\n', 'utf8');
+
+    const toolResult = await (plugin as any).tool.mdocs_validate.execute();
+    const commandResult = await (plugin as any).tool.mdocs.execute({ command: 'validate', args: {} });
+
+    expect(toolResult.valid).toBe(false);
+    expect(toolResult.initiatives.errors).toEqual(expect.arrayContaining([expect.stringContaining('broken--2026-05-29.md references missing wiki entry: developer/missing')]));
+    expect(toolResult.wiki.errors).toEqual(expect.arrayContaining([expect.stringContaining('developer/bad.md missing id')]));
+    expect(commandResult).toEqual(toolResult);
+  });
+
+  test('mdocs_status includes validation summary', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const initiativeDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initiativeDir, 'missing-title.md'), `---
+id: "missing-title"
+title: ""
+status: "active"
+created: "2026-05-29"
+related_wiki: []
+---
+`, 'utf8');
+
+    const result = await (plugin as any).tool.mdocs_status.execute();
+
+    expect(result.validation.valid).toBe(false);
+    expect(result.validation.initiatives.errors).toEqual(expect.arrayContaining([expect.stringContaining('missing-title.md missing title')]));
+  });
+
   test('mdocs returns helpful errors for invalid and unsupported commands', async () => {
     const plugin = createPlugin(testDir);
     (plugin as any).tool.mdocs_init.execute();
@@ -551,7 +603,6 @@ Existing file
     await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.update', args: {} })).resolves.toEqual({ error: 'initiative.update requires id' });
     await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.done', args: { id: 'missing' } })).resolves.toEqual({ error: 'Initiative not found: missing' });
     await expect((plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'developer', id: 'missing-title' } })).resolves.toEqual({ error: 'wiki.create requires category, id, and title' });
-    await expect((plugin as any).tool.mdocs.execute({ command: 'validate', args: {} })).resolves.toEqual({ error: 'validate not yet implemented' });
     await expect((plugin as any).tool.mdocs.execute({ command: 'index.sync', args: {} })).resolves.toEqual({ error: 'index.sync not yet implemented' });
 
     const unknown = await (plugin as any).tool.mdocs.execute({ command: 'nope', args: {} });
@@ -660,7 +711,8 @@ describe('Config Hook', () => {
       'mdocs_init',
       'mdocs_lookup',
       'mdocs_search',
-      'mdocs_status'
+      'mdocs_status',
+      'mdocs_validate'
     ]);
     expect(plugin.tools).toBeUndefined();
   });

@@ -229,4 +229,30 @@ describe('WikiManager', () => {
     const results = manager.findRelated(['nonexistent']);
     expect(results).toEqual([]);
   });
+
+  test('validate reports wiki entries missing required frontmatter', () => {
+    const manager = new WikiManager(testDir);
+    const categoryDir = path.join(testDir, 'wiki', 'architecture');
+    fs.mkdirSync(categoryDir, { recursive: true });
+    fs.writeFileSync(path.join(categoryDir, 'missing-fields.md'), `---
+id: ""
+title: ""
+category: ""
+created: "2026-05-29"
+updated: "2026-05-29"
+related_initiatives: []
+tags: []
+---
+
+Content`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/missing-fields.md missing id'),
+      expect.stringContaining('architecture/missing-fields.md missing title'),
+      expect.stringContaining('architecture/missing-fields.md missing category')
+    ]));
+  });
 });

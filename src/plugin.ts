@@ -49,6 +49,16 @@ export function createPlugin(baseDir: string) {
       return null;
     };
 
+    const validationResult = () => {
+      const initiativeValidation = initiatives.validate();
+      const wikiValidation = wiki.validate();
+      return {
+        initiatives: initiativeValidation,
+        wiki: wikiValidation,
+        valid: initiativeValidation.valid && wikiValidation.valid
+      };
+    };
+
     return {
     // Config hook: initialize mdocs and auto-register agent/skills
     config: (cfg: any) => {
@@ -269,7 +279,7 @@ export function createPlugin(baseDir: string) {
               return { success: true, filename: path.join(path.basename(path.dirname(filePath)), path.basename(filePath)), id: args.id };
             }
 
-            if (command === 'validate') return { error: 'validate not yet implemented' };
+            if (command === 'validate') return validationResult();
             if (command === 'index.sync') return { error: 'index.sync not yet implemented' };
 
             return { error: `Unsupported mdocs command: ${command}`, supportedCommands: supportedMdocsCommands };
@@ -316,8 +326,19 @@ export function createPlugin(baseDir: string) {
               id: i.id,
               title: i.title,
               dueDate: i.dueDate
-            }))
+            })),
+            validation: validationResult()
           };
+        }
+      },
+      mdocs_validate: {
+        description: "Validate mdocs initiative and wiki integrity",
+        execute: async () => {
+          try {
+            return validationResult();
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       },
       mdocs_search: {

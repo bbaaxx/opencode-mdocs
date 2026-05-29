@@ -132,6 +132,31 @@ export class WikiManager {
     return results;
   }
 
+  validate(): { valid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const categories = fs.readdirSync(this.dir)
+      .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
+
+    for (const category of categories) {
+      const catDir = path.join(this.dir, category);
+      const files = fs.readdirSync(catDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+      for (const fileName of files) {
+        const relativeName = `${category}/${fileName}`;
+        try {
+          const entry = this.parseWikiEntry(fs.readFileSync(path.join(catDir, fileName), 'utf8'));
+          if (!entry.id) errors.push(`${relativeName} missing id`);
+          if (!entry.title) errors.push(`${relativeName} missing title`);
+          if (!entry.category) errors.push(`${relativeName} missing category`);
+        } catch (err: any) {
+          errors.push(`${relativeName} invalid wiki entry format: ${err.message || String(err)}`);
+        }
+      }
+    }
+
+    return { valid: errors.length === 0, errors, warnings };
+  }
+
   private updateIndices(): void {
     const categories = fs.readdirSync(this.dir)
       .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());

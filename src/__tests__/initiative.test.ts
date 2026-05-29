@@ -363,4 +363,74 @@ No priority
     const sorted = manager.listByPriority();
     expect(sorted.map(i => i.id)).toEqual(['critical', 'critical-later', 'high', 'low']);
   });
+
+  test('validate reports duplicate ids, missing required fields, broken wiki refs, and index drift', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    const wikiDir = path.join(testDir, 'wiki', 'architecture');
+    fs.mkdirSync(wikiDir, { recursive: true });
+    fs.writeFileSync(path.join(wikiDir, 'existing.md'), '---\nid: "existing"\ntitle: "Existing"\ncategory: "architecture"\n---\n', 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'one.md'), `---
+id: "duplicate"
+title: "One"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["architecture/existing"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'two.md'), `---
+id: "duplicate"
+title: ""
+status: ""
+created: ""
+related_wiki: ["architecture/missing"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'INDEX.md'), '# Initiatives\n\n- **One** (active) — one.md — 2026-05-29 — []\n- ghost.md', 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('Duplicate initiative id "duplicate"'),
+      expect.stringContaining('two.md missing title'),
+      expect.stringContaining('two.md missing status'),
+      expect.stringContaining('two.md missing created'),
+      expect.stringContaining('two.md references missing wiki entry: architecture/missing')
+    ]));
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('INDEX.md lists missing initiative file: ghost.md'),
+      expect.stringContaining('INDEX.md missing initiative file: two.md')
+    ]));
+  });
+
+  test('create and update reject duplicate non-empty initiative ids without blocking same-file updates', () => {
+    const manager = new InitiativeManager(testDir);
+    const first: Initiative = { id: 'shared', title: 'First', status: 'active', created: '2026-05-29', updated: '2026-05-29', owner: 'a', tags: [], relatedWiki: [], objective: '', plan: [], progressLog: [], artifacts: [] };
+    const second: Initiative = { ...first, title: 'Second', created: '2026-05-30', updated: '2026-05-30' };
+    manager.create(first);
+
+    expect(() => manager.create(second)).toThrow('Duplicate initiative id "shared"');
+    expect(() => manager.update('shared--2026-05-29.md', { ...first, title: 'First Updated' })).not.toThrow();
+
+    const other: Initiative = { ...first, id: 'other', title: 'Other', created: '2026-05-31', updated: '2026-05-31' };
+    manager.create(other);
+    expect(() => manager.update('other--2026-05-31.md', { ...other, id: 'shared' })).toThrow('Duplicate initiative id "shared"');
+  });
 });
