@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Initiative, PlanItem, PlanItemStatus } from './types';
+import { Initiative, PlanItem, PlanItemStatus, parseFrontmatter } from './types';
 
 function parseSection(content: string, sectionName: string): string {
   const escaped = sectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -156,22 +156,8 @@ export class InitiativeManager {
   }
 
   private parseInitiative(content: string, fileName: string): Initiative {
-    const match = content.match(/---\n([\s\S]*?)\n---/);
-    if (!match) throw new Error(`Invalid initiative format: ${fileName}`);
-
-    // Parse YAML frontmatter (simplified - keys are snake_case)
-    const front: Record<string, any> = {};
-    for (const line of match[1].split('\n')) {
-      const [key, ...valueParts] = line.split(':');
-      if (key && valueParts.length > 0) {
-        const value = valueParts.join(':').trim();
-        try {
-          front[key.trim()] = JSON.parse(value);
-        } catch {
-          front[key.trim()] = value;
-        }
-      }
-    }
+    const front = parseFrontmatter(content);
+    if (!Object.keys(front).length) throw new Error(`Invalid initiative format: ${fileName}`);
 
     // Extract markdown body after frontmatter
     const body = content.replace(/---\n[\s\S]*?\n---/, '').trim();

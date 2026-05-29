@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { WikiEntry } from './types';
+import { WikiEntry, parseFrontmatter } from './types';
 
 export class WikiManager {
   private dir: string;
@@ -58,21 +58,8 @@ export class WikiManager {
   }
 
   private parseWikiEntry(content: string): WikiEntry {
-    const match = content.match(/---\n([\s\S]*?)\n---/);
-    if (!match) throw new Error('Invalid wiki entry format');
-
-    const front: Record<string, any> = {};
-    for (const line of match[1].split('\n')) {
-      const [key, ...valueParts] = line.split(':');
-      if (key && valueParts.length > 0) {
-        const value = valueParts.join(':').trim();
-        try {
-          front[key.trim()] = JSON.parse(value);
-        } catch {
-          front[key.trim()] = value;
-        }
-      }
-    }
+    const front = parseFrontmatter(content);
+    if (!Object.keys(front).length) throw new Error('Invalid wiki entry format');
 
     const body = content.replace(/---\n[\s\S]*?\n---/, '').trim();
 

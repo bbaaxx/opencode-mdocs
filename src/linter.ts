@@ -1,24 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { LintResult, LintIssue } from './types';
-
-function parseFrontmatter(content: string): Record<string, any> {
-  const match = content.match(/---\n([\s\S]*?)\n---/);
-  if (!match) return {};
-  const front: Record<string, any> = {};
-  for (const line of match[1].split('\n')) {
-    const [key, ...valueParts] = line.split(':');
-    if (key && valueParts.length > 0) {
-      const value = valueParts.join(':').trim();
-      try {
-        front[key.trim()] = JSON.parse(value);
-      } catch {
-        front[key.trim()] = value;
-      }
-    }
-  }
-  return front;
-}
+import { LintResult, LintIssue, parseFrontmatter } from './types';
 
 export class MdocsLinter {
   private baseDir: string;

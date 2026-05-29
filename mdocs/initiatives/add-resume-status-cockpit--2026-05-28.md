@@ -4,8 +4,7 @@ title: Add Resume and Status Cockpit
 status: done
 priority: high
 created: 2026-05-28
-updated: 2026-05-29
-owner: bbaaxx
+updated: 2026-05-29owner: bbaaxx
 tags: [phase-1, resume, status, ux, workflow]
 related_wiki: [philosophy/core-principles, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
 depends_on: [upgrade-dispatch-memory-retrieval]

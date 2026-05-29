@@ -105,3 +105,55 @@ export interface AuditEvent {
   step?: StepName;
   details: Record<string, any>;
 }
+
+/**
+ * Parse a YAML frontmatter value that may be JSON (`["a","b"]`) or
+ * YAML inline array (`[a, b, c]`) or a plain scalar.
+ */
+export function parseYamlValue(raw: string): any {
+  const trimmed = raw.trim();
+  if (trimmed === '') return '';
+
+  // 1. Try JSON first (covers quoted arrays, numbers, booleans, null)
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // not valid JSON – continue
+  }
+
+  // 2. YAML inline array: [item1, item2, ...]
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    const inner = trimmed.slice(1, -1).trim();
+    if (inner === '') return [];
+    return inner.split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+  }
+
+  // 3. Plain scalar
+  // Strip surrounding quotes if present
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1);
+  }
+
+  return trimmed;
+}
+
+/**
+ * Parse YAML frontmatter lines into a key-value map.
+ * Handles both JSON-style values and YAML inline arrays.
+ */
+export function parseFrontmatter(content: string): Record<string, any> {
+  const match = content.match(/---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return {};
+  const front: Record<string, any> = {};
+  for (const line of match[1].split('\n')) {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+    const key = line.slice(0, colonIdx).trim();
+    const value = line.slice(colonIdx + 1).trim();
+    if (key) {
+      front[key] = parseYamlValue(value);
+    }
+  }
+  return front;
+}
