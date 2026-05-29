@@ -291,44 +291,56 @@ export function createPlugin(baseDir: string) {
       mdocs_init: {
         description: "Initialize /mdocs folder structure",
         execute: async () => {
-          mdocs.init();
-          return { success: true };
+          try {
+            mdocs.init();
+            return { success: true };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       },
       mdocs_status: {
         description: "Show current workflow state and active initiatives",
         execute: async () => {
-          const state = workflow.status();
-          const initiativesDir = path.join(mdocsRoot, 'initiatives');
-          const allInitiatives = fs.existsSync(initiativesDir)
-            ? fs.readdirSync(initiativesDir)
-                .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
-                .map(f => initiatives.read(f))
-                .filter(Boolean)
-            : [];
-          const activeInitiatives = allInitiatives.filter(i => i!.status === 'active');
-          const blocked = initiatives.findBlocked();
-          const overdue = initiatives.findOverdue();
-          return {
-            workflow: state,
-            initiatives: activeInitiatives.map(i => ({
-              id: i!.id,
-              title: i!.title,
-              status: i!.status,
-              created: i!.created
-            })),
-            blocked: blocked.map(i => ({
-              id: i.id,
-              title: i.title,
-              dependsOn: i.dependsOn || []
-            })),
-            overdue: overdue.map(i => ({
-              id: i.id,
-              title: i.title,
-              dueDate: i.dueDate
-            })),
-            validation: validationResult()
-          };
+          try {
+            const state = workflow.status();
+            const initiativesDir = path.join(mdocsRoot, 'initiatives');
+            const allInitiatives = fs.existsSync(initiativesDir)
+              ? fs.readdirSync(initiativesDir)
+                  .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
+                  .map(f => { try { return initiatives.read(f); } catch { return null; } })
+                  .filter((i): i is NonNullable<typeof i> => i !== null && i !== undefined)
+              : [];
+            const activeInitiatives = allInitiatives.filter(i => i.status === 'active');
+            const blocked = initiatives.findBlocked();
+            const overdue = initiatives.findOverdue();
+            return {
+              workflow: {
+                currentStep: state.currentStep || 'IDLE',
+                activeInitiative: state.activeInitiative || '',
+                stepHistory: state.stepHistory || []
+              },
+              initiatives: activeInitiatives.map(i => ({
+                id: i.id || '',
+                title: i.title || '',
+                status: i.status || 'active',
+                created: i.created || ''
+              })),
+              blocked: blocked.map(i => ({
+                id: i.id || '',
+                title: i.title || '',
+                dependsOn: i.dependsOn || []
+              })),
+              overdue: overdue.map(i => ({
+                id: i.id || '',
+                title: i.title || '',
+                dueDate: i.dueDate || ''
+              })),
+              validation: validationResult()
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err), workflow: { currentStep: 'IDLE', activeInitiative: '', stepHistory: [] }, initiatives: [], blocked: [], overdue: [] };
+          }
         }
       },
       mdocs_validate: {
@@ -344,15 +356,19 @@ export function createPlugin(baseDir: string) {
       mdocs_search: {
         description: "Search across initiatives and wiki by keyword",
         execute: async (args: { query: string; filters?: { tags?: string[]; status?: string; category?: string; dateFrom?: string; dateTo?: string } }) => {
-          const results = search.query(args.query, args.filters || {});
-          return {
-            results: results.map(r => ({
-              type: r.type,
-              id: r.id,
-              title: r.title,
-              score: r.score
-            }))
-          };
+          try {
+            const results = search.query(args?.query || '', args?.filters || {});
+            return {
+              results: results.map(r => ({
+                type: r.type || '',
+                id: r.id || '',
+                title: r.title || '',
+                score: r.score || 0
+              }))
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err), results: [] };
+          }
         }
       },
       mdocs_lookup: {
