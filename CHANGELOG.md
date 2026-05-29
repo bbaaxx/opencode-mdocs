@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-05-28
+
+### Fixed
+
+- Fixed absolute `/mdocs/` paths in skills and agent instructions that broke fresh-project installs; replaced with relative `./mdocs/` paths.
+- All changes from 1.0.1 (opencode plugin compatibility): `tool` hook, `cfg.agent`, and compatibility tests.
+
 ## [1.0.1] - 2026-05-28
 
 ### Fixed
