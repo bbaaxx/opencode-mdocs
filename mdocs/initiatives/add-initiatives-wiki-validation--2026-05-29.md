@@ -66,6 +66,8 @@ Add integrity validation to prevent silent data corruption in initiatives and wi
 - [2026-05-29] Review GREEN focused: `npm test -- src/__tests__/initiative.test.ts src/__tests__/plugin.test.ts` passed after rejecting unsafe wiki path segments before filesystem checks.
 - [2026-05-29] Spec gap RED: `npm test -- src/__tests__/initiative.test.ts src/__tests__/wiki.test.ts` failed because related wiki issues were errors and wiki orphan warnings were absent.
 - [2026-05-29] Spec gap GREEN focused: `npm test -- src/__tests__/initiative.test.ts src/__tests__/wiki.test.ts` passed after moving related wiki issues to warnings and adding orphan wiki checks.
+- [2026-05-29] Malformed wiki ref RED: `npm test -- src/__tests__/initiative.test.ts` failed with `TypeError: ref.split is not a function` for `related_wiki: [123]`.
+- [2026-05-29] Malformed wiki ref GREEN focused: `npm test -- src/__tests__/initiative.test.ts` passed after warning on non-string wiki refs.
 
 ## Artifacts
 - `mdocs/initiatives/add-initiatives-wiki-validation--2026-05-29.md` — this initiative

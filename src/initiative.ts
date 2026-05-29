@@ -335,6 +335,10 @@ export class InitiativeManager {
       }
 
       for (const ref of initiative.relatedWiki || []) {
+        if (typeof ref !== 'string') {
+          warnings.push(`${fileName} has non-string wiki reference: ${String(ref)}`);
+          continue;
+        }
         const [category, id, ...rest] = ref.split('/');
         if (!isSafePathSegment(category) || !isSafePathSegment(id) || rest.length > 0) {
           warnings.push(`${fileName} has unsafe wiki reference: ${ref}`);

@@ -465,4 +465,33 @@ related_wiki: ["../secret/foo"]
       expect.stringContaining('unsafe-wiki--2026-05-29.md has unsafe wiki reference: ../secret/foo')
     ]));
   });
+
+  test('validate warns for non-string related_wiki entries instead of throwing', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    fs.writeFileSync(path.join(initiativesDir, 'numeric-wiki--2026-05-29.md'), `---
+id: "numeric-wiki"
+title: "Numeric Wiki"
+status: "active"
+created: "2026-05-29"
+related_wiki: [123]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('numeric-wiki--2026-05-29.md has non-string wiki reference: 123')
+    ]));
+  });
 });
