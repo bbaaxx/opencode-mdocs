@@ -217,4 +217,28 @@ describe('SearchEngine', () => {
     expect(activeResults.length).toBe(1);
     expect(activeResults[0].id).toBe('active-init');
   });
+
+  test('query includes snippets and matched field for memory retrieval', () => {
+    const wiki = new WikiManager(testDir);
+    wiki.create({
+      id: 'durable-memory',
+      title: 'Durable Memory',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: ['memory'],
+      content: 'Durable memory retrieval should include snippets for fresh agents.'
+    });
+    const search = new SearchEngine(testDir);
+    const results = search.query('durable memory');
+
+    expect(results[0]).toEqual(expect.objectContaining({
+      id: expect.any(String),
+      title: expect.any(String),
+      score: expect.any(Number),
+      snippet: expect.any(String),
+      matchedFields: expect.arrayContaining([expect.any(String)])
+    }));
+  });
 });

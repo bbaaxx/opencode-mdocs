@@ -448,8 +448,15 @@ export function createPlugin(baseDir: string) {
             }
           }
 
+          // Retrieve search-ranked memory
+          const searchQuery = `${initiative.title} ${initiative.objective} ${initiative.tags.join(' ')}`;
+          const retrievedMemory = search.query(searchQuery).slice(0, 5);
+
+          // Retrieve recent audit events for this initiative
+          const recentEvents = audit.query({ initiativeId: initiative.id, limit: 5 });
+
           const currentStep = workflow.getCurrentStep();
-          const context = assembler.assemble(initiative, wikiEntries, currentStep);
+          const context = assembler.assemble(initiative, wikiEntries, currentStep, { retrievedMemory, recentEvents });
 
           return {
             context,

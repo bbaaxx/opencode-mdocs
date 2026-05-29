@@ -798,6 +798,65 @@ describe('Config Hook', () => {
     expect(plugin.tools).toBeUndefined();
   });
 
+  test('mdocs_dispatch includes search-ranked memory and recent audit events', async () => {
+    const plugin = createPlugin(testDir);
+    await (plugin as any).tool.mdocs_init.execute();
+    const initDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initDir, 'dispatch--2026-05-29.md'), `---
+id: "dispatch"
+title: "Dispatch Memory"
+status: "active"
+created: "2026-05-29"
+updated: "2026-05-29"
+owner: "agent"
+tags: ["memory"]
+related_wiki: []
+---
+
+## Objective
+Improve durable memory retrieval.
+
+## Plan
+- [ ] Add retrieval
+
+## Progress Log
+- Baseline captured
+
+## Artifacts
+- src/subagent.ts
+`, 'utf8');
+    const wikiDir = path.join(testDir, 'mdocs', 'wiki', 'architecture');
+    fs.mkdirSync(wikiDir, { recursive: true });
+    fs.writeFileSync(path.join(wikiDir, 'durable-memory.md'), `---
+id: "durable-memory"
+title: "Durable Memory"
+category: "architecture"
+created: "2026-05-29"
+updated: "2026-05-29"
+related_initiatives: ["dispatch"]
+tags: ["memory"]
+---
+
+Durable memory retrieval should include snippets for fresh agents.
+`, 'utf8');
+    // Set the active initiative and step so audit events are tagged with the initiative id
+    fs.writeFileSync(path.join(testDir, 'mdocs', '.workflow-state.json'), JSON.stringify({
+      currentStep: 'PLAN',
+      activeInitiative: 'dispatch',
+      stepHistory: [{ step: 'PLAN', timestamp: new Date().toISOString() }]
+    }, null, 2), 'utf8');
+
+    // Re-create plugin to pick up updated workflow state
+    const pluginWithState = createPlugin(testDir);
+    await (pluginWithState as any)['tool.execute.after']({ name: 'read', args: { filePath: 'src/subagent.ts' } }, {});
+
+    const result = await (pluginWithState as any).tool.mdocs_dispatch.execute({ initiativeId: 'dispatch' });
+
+    expect(result.context).toContain('## Retrieved Memory');
+    expect(result.context).toContain('Durable Memory');
+    expect(result.context).toContain('## Recent Activity');
+  });
+
   test('default export returns plugin with current opencode tool hook', async () => {
     expect(typeof pluginDefault).toBe('function');
 
