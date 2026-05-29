@@ -83,6 +83,39 @@ export class WikiManager {
     };
   }
 
+  private parseRelatedWiki(content: string): string[] {
+    const match = content.match(/---\n([\s\S]*?)\n---/);
+    if (!match) return [];
+    for (const line of match[1].split('\n')) {
+      const [key, ...valueParts] = line.split(':');
+      if (key?.trim() !== 'related_wiki' || valueParts.length === 0) continue;
+      const value = valueParts.join(':').trim();
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  private referencedWikiRefs(): Set<string> {
+    const refs = new Set<string>();
+    const initiativesDir = path.join(path.dirname(this.dir), 'initiatives');
+    if (!fs.existsSync(initiativesDir)) return refs;
+    const files = fs.readdirSync(initiativesDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+    for (const fileName of files) {
+      try {
+        const content = fs.readFileSync(path.join(initiativesDir, fileName), 'utf8');
+        for (const ref of this.parseRelatedWiki(content)) refs.add(ref);
+      } catch {
+        // Ignore unreadable initiative files; initiative validation reports them.
+      }
+    }
+    return refs;
+  }
+
   update(category: string, id: string, entry: WikiEntry): string {
     const cat = this.sanitizeName(category);
     const entryId = this.sanitizeName(id);
@@ -130,6 +163,35 @@ export class WikiManager {
       }
     }
     return results;
+  }
+
+  validate(): { valid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const referencedWiki = this.referencedWikiRefs();
+    const categories = fs.readdirSync(this.dir)
+      .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
+
+    for (const category of categories) {
+      const catDir = path.join(this.dir, category);
+      const files = fs.readdirSync(catDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+      for (const fileName of files) {
+        const relativeName = `${category}/${fileName}`;
+        try {
+          const entry = this.parseWikiEntry(fs.readFileSync(path.join(catDir, fileName), 'utf8'));
+          if (!entry.id) errors.push(`${relativeName} missing id`);
+          if (!entry.title) errors.push(`${relativeName} missing title`);
+          if (!entry.category) errors.push(`${relativeName} missing category`);
+          if (entry.id && entry.category && !referencedWiki.has(`${entry.category}/${entry.id}`)) {
+            warnings.push(`${relativeName} is not referenced by any initiative`);
+          }
+        } catch (err: any) {
+          errors.push(`${relativeName} invalid wiki entry format: ${err.message || String(err)}`);
+        }
+      }
+    }
+
+    return { valid: errors.length === 0, errors, warnings };
   }
 
   private updateIndices(): void {

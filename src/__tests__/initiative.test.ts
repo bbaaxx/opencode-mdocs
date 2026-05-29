@@ -41,9 +41,9 @@ describe('InitiativeManager', () => {
     const files = fs.readdirSync(testDir);
     expect(files).toContain('initiatives');
     const initiativeFiles = fs.readdirSync(path.join(testDir, 'initiatives'));
-    expect(initiativeFiles).toContain('test-initiative--2025-05-24.md');
+    expect(initiativeFiles).toContain('test-init--2025-05-24.md');
 
-    const fileContent = fs.readFileSync(path.join(testDir, 'initiatives', 'test-initiative--2025-05-24.md'), 'utf8');
+    const fileContent = fs.readFileSync(path.join(testDir, 'initiatives', 'test-init--2025-05-24.md'), 'utf8');
     expect(fileContent).toContain('---');
     expect(fileContent).toContain('title: "Test Initiative"');
     expect(fileContent).toContain('## Objective');
@@ -69,7 +69,7 @@ describe('InitiativeManager', () => {
     };
 
     manager.create(initiative);
-    const read = manager.read('test-initiative--2025-05-24.md');
+    const read = manager.read('test-init--2025-05-24.md');
     
     expect(read).not.toBeNull();
     expect(read!.id).toBe('test-init');
@@ -131,13 +131,13 @@ describe('InitiativeManager', () => {
     manager.create(initiative);
     
     const updated = { ...initiative, objective: 'Updated' };
-    manager.update('test-initiative--2025-05-24.md', updated);
+    manager.update('test-init--2025-05-24.md', updated);
     
-    const read = manager.read('test-initiative--2025-05-24.md');
+    const read = manager.read('test-init--2025-05-24.md');
     expect(read!.objective).toBe('Updated');
   });
 
-  test('update with title change deletes old file', () => {
+  test('update with title change keeps id-based file', () => {
     const manager = new InitiativeManager(testDir);
     const initiative: Initiative = {
       id: 'test-init',
@@ -156,12 +156,12 @@ describe('InitiativeManager', () => {
 
     manager.create(initiative);
     const updated = { ...initiative, title: 'New Title' };
-    manager.update('old-title--2025-05-24.md', updated);
+    manager.update('test-init--2025-05-24.md', updated);
 
-    const oldExists = fs.existsSync(path.join(testDir, 'initiatives', 'old-title--2025-05-24.md'));
-    const newExists = fs.existsSync(path.join(testDir, 'initiatives', 'new-title--2025-05-24.md'));
-    expect(oldExists).toBe(false);
-    expect(newExists).toBe(true);
+    const idBasedExists = fs.existsSync(path.join(testDir, 'initiatives', 'test-init--2025-05-24.md'));
+    const titleBasedExists = fs.existsSync(path.join(testDir, 'initiatives', 'new-title--2025-05-24.md'));
+    expect(idBasedExists).toBe(true);
+    expect(titleBasedExists).toBe(false);
   });
 
   test('delete initiative removes file and updates index', () => {
@@ -182,10 +182,10 @@ describe('InitiativeManager', () => {
     };
 
     manager.create(initiative);
-    manager.delete('test-initiative--2025-05-24.md');
+    manager.delete('test-init--2025-05-24.md');
     
     const files = fs.readdirSync(path.join(testDir, 'initiatives'));
-    expect(files).not.toContain('test-initiative--2025-05-24.md');
+    expect(files).not.toContain('test-init--2025-05-24.md');
   });
 
   test('index is generated', () => {
@@ -362,5 +362,136 @@ No priority
 
     const sorted = manager.listByPriority();
     expect(sorted.map(i => i.id)).toEqual(['critical', 'critical-later', 'high', 'low']);
+  });
+
+  test('validate reports duplicate ids, missing required fields, broken wiki warnings, and index drift', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    const wikiDir = path.join(testDir, 'wiki', 'architecture');
+    fs.mkdirSync(wikiDir, { recursive: true });
+    fs.writeFileSync(path.join(wikiDir, 'existing.md'), '---\nid: "existing"\ntitle: "Existing"\ncategory: "architecture"\n---\n', 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'one.md'), `---
+id: "duplicate"
+title: "One"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["architecture/existing"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'two.md'), `---
+id: "duplicate"
+title: ""
+status: ""
+created: ""
+related_wiki: ["architecture/missing"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'INDEX.md'), '# Initiatives\n\n- **One** (active) — one.md — 2026-05-29 — []\n- ghost.md', 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('Duplicate initiative id "duplicate"'),
+      expect.stringContaining('two.md missing title'),
+      expect.stringContaining('two.md missing status'),
+      expect.stringContaining('two.md missing created')
+    ]));
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('two.md references missing wiki entry: architecture/missing'),
+      expect.stringContaining('INDEX.md lists missing initiative file: ghost.md'),
+      expect.stringContaining('INDEX.md missing initiative file: two.md')
+    ]));
+  });
+
+  test('create and update reject duplicate non-empty initiative ids without blocking same-file updates', () => {
+    const manager = new InitiativeManager(testDir);
+    const first: Initiative = { id: 'shared', title: 'First', status: 'active', created: '2026-05-29', updated: '2026-05-29', owner: 'a', tags: [], relatedWiki: [], objective: '', plan: [], progressLog: [], artifacts: [] };
+    const second: Initiative = { ...first, title: 'Second', created: '2026-05-30', updated: '2026-05-30' };
+    manager.create(first);
+
+    expect(() => manager.create(second)).toThrow('Duplicate initiative id "shared"');
+    expect(() => manager.update('shared--2026-05-29.md', { ...first, title: 'First Updated' })).not.toThrow();
+
+    const other: Initiative = { ...first, id: 'other', title: 'Other', created: '2026-05-31', updated: '2026-05-31' };
+    manager.create(other);
+    expect(() => manager.update('other--2026-05-31.md', { ...other, id: 'shared' })).toThrow('Duplicate initiative id "shared"');
+  });
+
+  test('validate warns for unsafe related_wiki path segments without resolving outside wiki root', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    const escapedSecretDir = path.join(testDir, 'secret');
+    fs.mkdirSync(escapedSecretDir, { recursive: true });
+    fs.writeFileSync(path.join(escapedSecretDir, 'foo.md'), 'outside wiki root', 'utf8');
+    fs.writeFileSync(path.join(initiativesDir, 'unsafe-wiki--2026-05-29.md'), `---
+id: "unsafe-wiki"
+title: "Unsafe Wiki"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["../secret/foo"]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('unsafe-wiki--2026-05-29.md has unsafe wiki reference: ../secret/foo')
+    ]));
+  });
+
+  test('validate warns for non-string related_wiki entries instead of throwing', () => {
+    const manager = new InitiativeManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    fs.writeFileSync(path.join(initiativesDir, 'numeric-wiki--2026-05-29.md'), `---
+id: "numeric-wiki"
+title: "Numeric Wiki"
+status: "active"
+created: "2026-05-29"
+related_wiki: [123]
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('numeric-wiki--2026-05-29.md has non-string wiki reference: 123')
+    ]));
   });
 });

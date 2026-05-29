@@ -229,4 +229,81 @@ describe('WikiManager', () => {
     const results = manager.findRelated(['nonexistent']);
     expect(results).toEqual([]);
   });
+
+  test('validate reports wiki entries missing required frontmatter', () => {
+    const manager = new WikiManager(testDir);
+    const categoryDir = path.join(testDir, 'wiki', 'architecture');
+    fs.mkdirSync(categoryDir, { recursive: true });
+    fs.writeFileSync(path.join(categoryDir, 'missing-fields.md'), `---
+id: ""
+title: ""
+category: ""
+created: "2026-05-29"
+updated: "2026-05-29"
+related_initiatives: []
+tags: []
+---
+
+Content`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/missing-fields.md missing id'),
+      expect.stringContaining('architecture/missing-fields.md missing title'),
+      expect.stringContaining('architecture/missing-fields.md missing category')
+    ]));
+  });
+
+  test('validate warns for wiki entries not referenced by initiatives', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'orphan',
+      title: 'Orphan',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'No initiative points here'
+    });
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/orphan.md is not referenced by any initiative')
+    ]));
+  });
+
+  test('validate does not warn when wiki entry is referenced by an initiative', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'referenced',
+      title: 'Referenced',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'An initiative points here'
+    });
+    const initiativesDir = path.join(testDir, 'initiatives');
+    fs.mkdirSync(initiativesDir, { recursive: true });
+    fs.writeFileSync(path.join(initiativesDir, 'uses-wiki.md'), `---
+id: "uses-wiki"
+title: "Uses Wiki"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["architecture/referenced"]
+---
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.warnings).not.toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/referenced.md is not referenced by any initiative')
+    ]));
+  });
 });

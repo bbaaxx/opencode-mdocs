@@ -47,6 +47,10 @@ function parsePlanSection(content: string): { description: string; status: PlanI
     .map(line => parsePlanItem(line));
 }
 
+function isSafePathSegment(segment: string): boolean {
+  return !!segment && segment !== '.' && segment !== '..' && path.basename(segment) === segment;
+}
+
 export class InitiativeManager {
   private dir: string;
 
@@ -60,7 +64,8 @@ export class InitiativeManager {
   }
 
   private formatFileName(initiative: Initiative): string {
-    const slug = this.slugify(initiative.title);
+    const idSlug = this.slugify(initiative.id || '');
+    const slug = idSlug || this.slugify(initiative.title);
     return `${slug}--${initiative.created}.md`;
   }
 
@@ -96,6 +101,26 @@ export class InitiativeManager {
     return `---\n${Object.entries(front).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n\n`;
   }
 
+  private initiativeFiles(): string[] {
+    return fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+  }
+
+  private assertUniqueId(id: string, ignoreFileName?: string): void {
+    if (!id) return;
+    const ignored = ignoreFileName ? path.resolve(this.dir, this.sanitizeFileName(ignoreFileName)) : '';
+    for (const fileName of this.initiativeFiles()) {
+      if (ignored && path.resolve(this.dir, fileName) === ignored) continue;
+      try {
+        const existing = this.read(fileName);
+        if (existing?.id === id) {
+          throw new Error(`Duplicate initiative id "${id}" found in ${fileName}`);
+        }
+      } catch (err: any) {
+        if (err.message?.startsWith('Duplicate initiative id')) throw err;
+      }
+    }
+  }
+
   create(initiative: Initiative): string {
     const fileName = this.formatFileName(initiative);
     const filePath = path.join(this.dir, fileName);
@@ -103,6 +128,8 @@ export class InitiativeManager {
     if (fs.existsSync(filePath)) {
       throw new Error(`Initiative file already exists: ${fileName}`);
     }
+
+    this.assertUniqueId(initiative.id);
 
     const content = this.toFrontmatter(initiative) +
       `## Objective\n${initiative.objective}\n\n` +
@@ -166,6 +193,7 @@ export class InitiativeManager {
 
   update(fileName: string, initiative: Initiative): string {
     const sanitized = this.sanitizeFileName(fileName);
+    this.assertUniqueId(initiative.id, sanitized);
     const oldPath = path.join(this.dir, sanitized);
     const newFileName = this.formatFileName(initiative);
     const newPath = path.join(this.dir, newFileName);
@@ -258,8 +286,86 @@ export class InitiativeManager {
     });
   }
 
+  validate(): { valid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const ids = new Map<string, string>();
+    const files = this.initiativeFiles();
+    const wikiRoot = path.join(path.dirname(this.dir), 'wiki');
+
+    for (const fileName of files) {
+      let initiative: Initiative;
+      let front: Record<string, any> = {};
+      try {
+        const content = fs.readFileSync(path.join(this.dir, fileName), 'utf8');
+        const match = content.match(/---\n([\s\S]*?)\n---/);
+        if (match) {
+          for (const line of match[1].split('\n')) {
+            const [key, ...valueParts] = line.split(':');
+            if (key && valueParts.length > 0) {
+              const value = valueParts.join(':').trim();
+              try {
+                front[key.trim()] = JSON.parse(value);
+              } catch {
+                front[key.trim()] = value;
+              }
+            }
+          }
+        }
+        const parsed = this.read(fileName);
+        if (!parsed) continue;
+        initiative = parsed;
+      } catch (err: any) {
+        errors.push(`${fileName} invalid initiative format: ${err.message || String(err)}`);
+        continue;
+      }
+
+      if (!front.id) errors.push(`${fileName} missing id`);
+      if (!front.title) errors.push(`${fileName} missing title`);
+      if (!front.status) errors.push(`${fileName} missing status`);
+      if (!front.created) errors.push(`${fileName} missing created`);
+
+      if (initiative.id) {
+        const firstFile = ids.get(initiative.id);
+        if (firstFile) {
+          errors.push(`Duplicate initiative id "${initiative.id}" in ${firstFile} and ${fileName}`);
+        } else {
+          ids.set(initiative.id, fileName);
+        }
+      }
+
+      for (const ref of initiative.relatedWiki || []) {
+        if (typeof ref !== 'string') {
+          warnings.push(`${fileName} has non-string wiki reference: ${String(ref)}`);
+          continue;
+        }
+        const [category, id, ...rest] = ref.split('/');
+        if (!isSafePathSegment(category) || !isSafePathSegment(id) || rest.length > 0) {
+          warnings.push(`${fileName} has unsafe wiki reference: ${ref}`);
+        } else if (!fs.existsSync(path.join(wikiRoot, category, `${id}.md`))) {
+          warnings.push(`${fileName} references missing wiki entry: ${ref}`);
+        }
+      }
+    }
+
+    const indexPath = path.join(this.dir, 'INDEX.md');
+    if (fs.existsSync(indexPath)) {
+      const indexContent = fs.readFileSync(indexPath, 'utf8');
+      const listed = new Set(Array.from(indexContent.matchAll(/[\w.-]+\.md/g)).map(match => match[0]).filter(name => name !== 'INDEX.md'));
+      const actual = new Set(files);
+      for (const listedFile of listed) {
+        if (!actual.has(listedFile)) warnings.push(`INDEX.md lists missing initiative file: ${listedFile}`);
+      }
+      for (const actualFile of actual) {
+        if (!listed.has(actualFile)) warnings.push(`INDEX.md missing initiative file: ${actualFile}`);
+      }
+    }
+
+    return { valid: errors.length === 0, errors, warnings };
+  }
+
   private listAll(): Initiative[] {
-    const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+    const files = this.initiativeFiles();
     const initiatives: Initiative[] = [];
     for (const f of files) {
       try {
@@ -273,17 +379,17 @@ export class InitiativeManager {
   }
 
   private updateIndex(): void {
-    const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
-    const initiatives: Initiative[] = [];
+    const files = this.initiativeFiles();
+    const entries: { initiative: Initiative; fileName: string }[] = [];
     for (const f of files) {
       try {
         const init = this.read(f);
-        if (init) initiatives.push(init);
+        if (init) entries.push({ initiative: init, fileName: f });
       } catch {
         // Skip malformed files
       }
     }
-    const lines = initiatives.map(i => `- **${i.title}** (${i.status}) — ${i.created} — [${i.tags.join(', ')}]`);
+    const lines = entries.map(({ initiative: i, fileName }) => `- **${i.title}** (${i.status}) — ${fileName} — ${i.created} — [${i.tags.join(', ')}]`);
     const index = `# Initiatives\n\n${lines.join('\n') || 'No initiatives yet.'}`;
     fs.writeFileSync(path.join(this.dir, 'INDEX.md'), index, 'utf8');
   }

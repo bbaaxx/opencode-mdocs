@@ -14,6 +14,10 @@ function loadAgentPrompt(agentPath: string) {
   return content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim();
 }
 
+function slugify(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export function createPlugin(baseDir: string) {
   const mdocsRoot = path.join(baseDir, 'mdocs');
   const mdocs = new MdocsManager(mdocsRoot);
@@ -23,6 +27,37 @@ export function createPlugin(baseDir: string) {
     const assembler = new SubagentAssembler();
     const search = new SearchEngine(mdocsRoot);
     const audit = new AuditLog(mdocsRoot);
+
+    const today = () => new Date().toISOString().split('T')[0];
+    const supportedMdocsCommands = [
+      'initiative.create',
+      'initiative.update',
+      'initiative.done',
+      'wiki.create',
+      'validate',
+      'index.sync'
+    ];
+
+    const findInitiativeFilename = (id: string): string | null => {
+      const initiativesDir = path.join(mdocsRoot, 'initiatives');
+      if (!fs.existsSync(initiativesDir)) return null;
+      const files = fs.readdirSync(initiativesDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+      for (const fileName of files) {
+        const initiative = initiatives.read(fileName);
+        if (initiative?.id === id) return fileName;
+      }
+      return null;
+    };
+
+    const validationResult = () => {
+      const initiativeValidation = initiatives.validate();
+      const wikiValidation = wiki.validate();
+      return {
+        initiatives: initiativeValidation,
+        wiki: wikiValidation,
+        valid: initiativeValidation.valid && wikiValidation.valid
+      };
+    };
 
     return {
     // Config hook: initialize mdocs and auto-register agent/skills
@@ -115,12 +150,14 @@ export function createPlugin(baseDir: string) {
       });
 
       if (step !== 'IDLE' && activeInitiativeId) {
-        const fileName = `${activeInitiativeId}.md`;
-        const initiative = initiatives.read(fileName);
-        if (initiative) {
-          initiative.progressLog.push(`[${new Date().toISOString()}] ${toolName} executed at step ${step}`);
-          initiative.updated = new Date().toISOString().split('T')[0];
-          initiatives.update(fileName, initiative);
+        const fileName = findInitiativeFilename(activeInitiativeId);
+        if (fileName) {
+          const initiative = initiatives.read(fileName);
+          if (initiative) {
+            initiative.progressLog.push(`[${new Date().toISOString()}] ${toolName} executed at step ${step}`);
+            initiative.updated = new Date().toISOString().split('T')[0];
+            initiatives.update(fileName, initiative);
+          }
         }
       }
     },
@@ -142,12 +179,14 @@ export function createPlugin(baseDir: string) {
 
       if (significantEvents.includes(eventType)) {
         if (activeInitiativeId) {
-          const fileName = `${activeInitiativeId}.md`;
-          const initiative = initiatives.read(fileName);
-          if (initiative) {
-            initiative.progressLog.push(`[${new Date().toISOString()}] Event: ${eventType}`);
-            initiative.updated = new Date().toISOString().split('T')[0];
-            initiatives.update(fileName, initiative);
+          const fileName = findInitiativeFilename(activeInitiativeId);
+          if (fileName) {
+            const initiative = initiatives.read(fileName);
+            if (initiative) {
+              initiative.progressLog.push(`[${new Date().toISOString()}] Event: ${eventType}`);
+              initiative.updated = new Date().toISOString().split('T')[0];
+              initiatives.update(fileName, initiative);
+            }
           }
         }
       }
@@ -165,60 +204,224 @@ export function createPlugin(baseDir: string) {
 
     // Custom tools
     tool: {
+      mdocs: {
+        description: "Run mdocs initiative/wiki commands",
+        execute: async (input: { command: string; args: any }) => {
+          try {
+            const command = input?.command;
+            const args = input?.args || {};
+            const date = today();
+
+            if (command === 'initiative.create') {
+              if (!args.title) return { error: 'initiative.create requires title' };
+              const id = args.id || slugify(args.title);
+              const filePath = initiatives.create({
+                id,
+                title: args.title,
+                status: 'active',
+                created: date,
+                updated: date,
+                owner: args.owner || '',
+                tags: Array.isArray(args.tags) ? args.tags : [],
+                relatedWiki: Array.isArray(args.relatedWiki) ? args.relatedWiki : [],
+                objective: args.objective || '',
+                plan: Array.isArray(args.plan)
+                  ? args.plan.map((item: any) => ({
+                      description: typeof item === 'string' ? item : item?.description || '',
+                      status: 'pending' as const
+                    })).filter((item: any) => item.description)
+                  : [],
+                progressLog: [`[${new Date().toISOString()}] Created initiative via mdocs command`],
+                artifacts: []
+              });
+              return { success: true, filename: path.basename(filePath), id };
+            }
+
+            if (command === 'initiative.update') {
+              if (!args.id) return { error: 'initiative.update requires id' };
+              const fileName = findInitiativeFilename(args.id);
+              if (!fileName) return { error: `Initiative not found: ${args.id}` };
+              const initiative = initiatives.read(fileName);
+              if (!initiative) return { error: `Initiative not found: ${args.id}` };
+              const updates = args.updates || args;
+              for (const field of ['status', 'tags', 'priority', 'dueDate', 'dependsOn', 'owner']) {
+                if (updates[field] !== undefined) {
+                  (initiative as any)[field] = updates[field];
+                }
+              }
+              initiative.updated = date;
+              if (args.progressNote) initiative.progressLog.push(args.progressNote);
+              const filePath = initiatives.update(fileName, initiative);
+              return { success: true, filename: path.basename(filePath), id: initiative.id };
+            }
+
+            if (command === 'initiative.done') {
+              if (!args.id) return { error: 'initiative.done requires id' };
+              const fileName = findInitiativeFilename(args.id);
+              if (!fileName) return { error: `Initiative not found: ${args.id}` };
+              const initiative = initiatives.read(fileName);
+              if (!initiative) return { error: `Initiative not found: ${args.id}` };
+              initiative.status = 'done';
+              initiative.updated = date;
+              initiative.progressLog.push(`[${new Date().toISOString()}] Marked done via mdocs command`);
+              const filePath = initiatives.update(fileName, initiative);
+              return { success: true, filename: path.basename(filePath), id: initiative.id };
+            }
+
+            if (command === 'wiki.create') {
+              if (!args.category || !args.id || !args.title) return { error: 'wiki.create requires category, id, and title' };
+              const filePath = wiki.create({
+                category: args.category,
+                id: args.id,
+                title: args.title,
+                created: date,
+                updated: date,
+                content: args.content || '',
+                relatedInitiatives: Array.isArray(args.relatedInitiatives) ? args.relatedInitiatives : [],
+                tags: Array.isArray(args.tags) ? args.tags : []
+              });
+              return { success: true, filename: path.join(path.basename(path.dirname(filePath)), path.basename(filePath)), id: args.id };
+            }
+
+            if (command === 'validate') return validationResult();
+            if (command === 'index.sync') return { error: 'index.sync not yet implemented' };
+
+            return { error: `Unsupported mdocs command: ${command}`, supportedCommands: supportedMdocsCommands };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
+        }
+      },
       mdocs_init: {
         description: "Initialize /mdocs folder structure",
         execute: async () => {
-          mdocs.init();
-          return { success: true };
+          try {
+            mdocs.init();
+            return { success: true };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       },
       mdocs_status: {
         description: "Show current workflow state and active initiatives",
         execute: async () => {
-          const state = workflow.status();
-          const initiativesDir = path.join(mdocsRoot, 'initiatives');
-          const allInitiatives = fs.existsSync(initiativesDir)
-            ? fs.readdirSync(initiativesDir)
-                .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
-                .map(f => initiatives.read(f))
-                .filter(Boolean)
-            : [];
-          const activeInitiatives = allInitiatives.filter(i => i!.status === 'active');
-          const blocked = initiatives.findBlocked();
-          const overdue = initiatives.findOverdue();
-          return {
-            workflow: state,
-            initiatives: activeInitiatives.map(i => ({
-              id: i!.id,
-              title: i!.title,
-              status: i!.status,
-              created: i!.created
-            })),
-            blocked: blocked.map(i => ({
-              id: i.id,
-              title: i.title,
-              dependsOn: i.dependsOn || []
-            })),
-            overdue: overdue.map(i => ({
-              id: i.id,
-              title: i.title,
-              dueDate: i.dueDate
-            }))
-          };
+          try {
+            const state = workflow.status();
+            const initiativesDir = path.join(mdocsRoot, 'initiatives');
+            const allInitiatives = fs.existsSync(initiativesDir)
+              ? fs.readdirSync(initiativesDir)
+                  .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
+                  .map(f => { try { return initiatives.read(f); } catch { return null; } })
+                  .filter((i): i is NonNullable<typeof i> => i !== null && i !== undefined)
+              : [];
+            const activeInitiatives = allInitiatives.filter(i => i.status === 'active');
+            const blocked = initiatives.findBlocked();
+            const overdue = initiatives.findOverdue();
+            return {
+              workflow: {
+                currentStep: state.currentStep || 'IDLE',
+                activeInitiative: state.activeInitiative || '',
+                stepHistory: state.stepHistory || []
+              },
+              initiatives: activeInitiatives.map(i => ({
+                id: i.id || '',
+                title: i.title || '',
+                status: i.status || 'active',
+                created: i.created || ''
+              })),
+              blocked: blocked.map(i => ({
+                id: i.id || '',
+                title: i.title || '',
+                dependsOn: i.dependsOn || []
+              })),
+              overdue: overdue.map(i => ({
+                id: i.id || '',
+                title: i.title || '',
+                dueDate: i.dueDate || ''
+              })),
+              validation: validationResult()
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err), workflow: { currentStep: 'IDLE', activeInitiative: '', stepHistory: [] }, initiatives: [], blocked: [], overdue: [] };
+          }
+        }
+      },
+      mdocs_validate: {
+        description: "Validate mdocs initiative and wiki integrity",
+        execute: async () => {
+          try {
+            return validationResult();
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       },
       mdocs_search: {
         description: "Search across initiatives and wiki by keyword",
         execute: async (args: { query: string; filters?: { tags?: string[]; status?: string; category?: string; dateFrom?: string; dateTo?: string } }) => {
-          const results = search.query(args.query, args.filters || {});
-          return {
-            results: results.map(r => ({
-              type: r.type,
-              id: r.id,
-              title: r.title,
-              score: r.score
-            }))
-          };
+          try {
+            const results = search.query(args?.query || '', args?.filters || {});
+            return {
+              results: results.map(r => ({
+                type: r.type || '',
+                id: r.id || '',
+                title: r.title || '',
+                score: r.score || 0
+              }))
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err), results: [] };
+          }
+        }
+      },
+      mdocs_lookup: {
+        description: "Resolve an initiative by id, title, slug, or filename",
+        execute: async (args: { query: string; field?: 'id' | 'title' | 'slug' }) => {
+          try {
+            const query = args?.query || '';
+            const normalizedQuery = query.toLowerCase();
+            const querySlug = slugify(query);
+            const initiativesDir = path.join(mdocsRoot, 'initiatives');
+            const files = fs.existsSync(initiativesDir)
+              ? fs.readdirSync(initiativesDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md')
+              : [];
+
+            for (const fileName of files) {
+              const initiative = initiatives.read(fileName);
+              if (!initiative) continue;
+
+              const fileStem = fileName.replace(/\.md$/, '');
+              const fileSlug = slugify(fileStem.replace(/--\d{4}-\d{2}-\d{2}$/, ''));
+              const idSlug = slugify(initiative.id || '');
+              const titleSlug = slugify(initiative.title || '');
+              const title = initiative.title || '';
+              const candidates: Record<string, boolean> = {
+                id: initiative.id === query || idSlug === querySlug,
+                title: title.toLowerCase().includes(normalizedQuery) || titleSlug === querySlug,
+                slug: idSlug === querySlug || titleSlug === querySlug || fileName === query || fileStem === query || fileSlug === querySlug
+              };
+
+              const matched = args?.field
+                ? candidates[args.field]
+                : candidates.id || candidates.title || candidates.slug;
+
+              if (matched) {
+                return {
+                  type: 'initiative',
+                  id: initiative.id,
+                  title: initiative.title,
+                  status: initiative.status,
+                  tags: initiative.tags,
+                  filename: fileName
+                };
+              }
+            }
+
+            return { error: 'No initiatives found for query', query };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       },
       mdocs_dispatch: {
