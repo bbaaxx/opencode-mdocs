@@ -690,6 +690,45 @@ related_wiki: []
     expect(unknown.error).toContain('Unsupported mdocs command: nope');
     expect(unknown.supportedCommands).toContain('initiative.create');
   });
+
+  test('mdocs_resume returns next action, blockers, latest progress, and validation', async () => {
+    const plugin = createPlugin(testDir);
+    await (plugin as any).tool.mdocs_init.execute();
+    const initDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initDir, 'resume--2026-05-29.md'), `---
+id: "resume"
+title: "Resume Cockpit"
+status: "active"
+created: "2026-05-29"
+updated: "2026-05-29"
+owner: "agent"
+tags: ["resume"]
+related_wiki: []
+next_action: "Continue with dispatch retrieval."
+blockers: ["Need metadata"]
+---
+
+## Objective
+Help fresh agents resume.
+
+## Plan
+- [ ] Add cockpit
+
+## Progress Log
+- Baseline captured
+- Metadata added
+
+## Artifacts
+`, 'utf8');
+
+    const result = await (plugin as any).tool.mdocs_resume.execute({ initiativeId: 'resume' });
+
+    expect(result.initiative.id).toBe('resume');
+    expect(result.nextAction).toBe('Continue with dispatch retrieval.');
+    expect(result.blockers).toEqual(['Need metadata']);
+    expect(result.latestProgress).toBe('Metadata added');
+    expect(result.validation).toBeDefined();
+  });
 });
 
 describe('Config Hook', () => {
@@ -791,6 +830,7 @@ describe('Config Hook', () => {
       'mdocs_dispatch',
       'mdocs_init',
       'mdocs_lookup',
+      'mdocs_resume',
       'mdocs_search',
       'mdocs_status',
       'mdocs_validate'

@@ -318,6 +318,22 @@ export function createPlugin(baseDir: string) {
             const activeInitiatives = allInitiatives.filter(i => i.status === 'active');
             const blocked = initiatives.findBlocked();
             const overdue = initiatives.findOverdue();
+
+            // Add resume info for the active initiative
+            let resume: any = undefined;
+            if (state.activeInitiative) {
+              const activeInit = allInitiatives.find(i => i.id === state.activeInitiative);
+              if (activeInit) {
+                resume = {
+                  initiative: { id: activeInit.id, title: activeInit.title, status: activeInit.status },
+                  currentStep: state.currentStep || 'IDLE',
+                  nextAction: activeInit.nextAction || activeInit.plan.find(p => p.status !== 'done')?.description || '',
+                  blockers: activeInit.blockers || [],
+                  latestProgress: activeInit.progressLog.at(-1) || ''
+                };
+              }
+            }
+
             return {
               workflow: {
                 currentStep: state.currentStep || 'IDLE',
@@ -340,6 +356,7 @@ export function createPlugin(baseDir: string) {
                 title: i.title || '',
                 dueDate: i.dueDate || ''
               })),
+              resume,
               validation: validationResult()
             };
           } catch (err: any) {
@@ -474,6 +491,30 @@ export function createPlugin(baseDir: string) {
             limit: args.limit
           });
           return { events };
+        }
+      },
+      mdocs_resume: {
+        description: "Resume active or specified initiative with next action and validation",
+        execute: async (args: { initiativeId?: string }) => {
+          try {
+            const initiativeId = args?.initiativeId || workflow.status().activeInitiative;
+            if (!initiativeId) return { error: 'No initiativeId provided and no active initiative' };
+            const fileName = findInitiativeFilename(initiativeId);
+            if (!fileName) return { error: `Initiative not found: ${initiativeId}` };
+            const initiative = initiatives.read(fileName);
+            if (!initiative) return { error: `Initiative not found: ${initiativeId}` };
+            workflow.setActiveInitiative(initiative.id);
+            return {
+              initiative: { id: initiative.id, title: initiative.title, status: initiative.status },
+              currentStep: workflow.status().currentStep,
+              nextAction: initiative.nextAction || initiative.plan.find(p => p.status !== 'done')?.description || '',
+              blockers: initiative.blockers || [],
+              latestProgress: initiative.progressLog.at(-1) || '',
+              validation: validationResult()
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       }
     }

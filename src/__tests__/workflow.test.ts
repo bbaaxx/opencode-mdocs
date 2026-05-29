@@ -155,4 +155,15 @@ describe('WorkflowEngine', () => {
     const saved = JSON.parse(fs.readFileSync(statePath, 'utf8'));
     expect(saved.currentStep).toBe('UNDERSTAND');
   });
+
+  test('can set active initiative and reset workflow for resume', () => {
+    const workflow = new WorkflowEngine(testDir);
+
+    workflow.setActiveInitiative('dispatch');
+    workflow.resumeAt('CONTEXT');
+
+    expect(workflow.status().activeInitiative).toBe('dispatch');
+    expect(workflow.status().currentStep).toBe('CONTEXT');
+    expect(workflow.status().stepHistory.at(-1)?.step).toBe('CONTEXT');
+  });
 });

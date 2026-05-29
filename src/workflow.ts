@@ -125,4 +125,15 @@ export class WorkflowEngine {
   status(): WorkflowState {
     return this.state;
   }
+
+  setActiveInitiative(initiativeId: string | null): void {
+    this.state.activeInitiative = initiativeId;
+    this.save();
+  }
+
+  resumeAt(step: StepName): void {
+    this.state.currentStep = step;
+    this.state.stepHistory.push({ step, timestamp: new Date().toISOString() });
+    this.save();
+  }
 }
