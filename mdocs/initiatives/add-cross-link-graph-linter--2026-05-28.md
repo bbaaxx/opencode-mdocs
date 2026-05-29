@@ -1,10 +1,10 @@
 ---
 id: add-cross-link-graph-linter
 title: Add Cross-Link Graph Linter Rules
-status: active
+status: done
 priority: high
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-05-29
 owner: bbaaxx
 tags: [phase-1, linter, graph, links, quality]
 related_wiki: [philosophy/core-principles, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
@@ -63,6 +63,7 @@ Make initiative/wiki relationships first-class by adding linter rules and option
 
 ## Progress Log
 - [2026-05-28] Created as Phase 1 implementation initiative from philosophy alignment roadmap.
+- [2026-05-29] Implemented: graph-level lint pass checking broken initiative/wiki links, missing backlinks, and done initiative completion gates (no stable wiki learning). mdocs_validate includes graph results. Full TDD with RED/GREEN evidence. All tests pass, TypeScript build passes.
 
 ## Artifacts
 - `src/linter.ts` — graph linter implementation target

@@ -135,3 +135,18 @@ Suggested execution order:
 2. `upgrade-dispatch-memory-retrieval` — gives subagents richer continuity.
 3. `add-resume-status-cockpit` — exposes continuity as product/UX behavior.
 4. `add-cross-link-graph-linter` — hardens graph integrity after metadata is defined.
+
+## Phase 1 Implementation Notes
+
+Phase 1 was implemented on the `align-implementation-with-philosophy-phase-1` branch with the following commits:
+
+1. `feat: add mdocs memory metadata` — v2 initiative fields (phase, handoffSummary, openQuestions, blockers, nextAction) and wiki fields (lifecycle, knowledgeType, confidence, sourceInitiatives, supersedes)
+2. `feat: enrich dispatch memory retrieval` — search snippets and matched fields in SearchResult, enriched SubagentAssembler with handoff/blockers/retrieved memory/recent activity sections, mdocs_dispatch queries search and audit
+3. `feat: add mdocs resume cockpit` — WorkflowEngine.setActiveInitiative/resumeAt, mdocs_resume tool, enriched mdocs_status with resume info
+4. `feat: lint mdocs memory graph` — graph-level lint pass checking broken links, missing backlinks, and done initiative completion gates; mdocs_validate includes graph results
+5. `docs: capture phase one memory alignment` — skills and documentation updates
+
+Verification commands and outputs:
+- `npm test` — 122 tests passing across 11 suites
+- `npm run build` — TypeScript compiles cleanly
+- `npm pack --dry-run` — package includes all expected artifacts

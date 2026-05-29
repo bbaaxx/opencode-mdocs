@@ -1,10 +1,10 @@
 ---
 id: add-resume-status-cockpit
 title: Add Resume and Status Cockpit
-status: active
+status: done
 priority: high
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-05-29
 owner: bbaaxx
 tags: [phase-1, resume, status, ux, workflow]
 related_wiki: [philosophy/core-principles, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
@@ -59,6 +59,7 @@ Create a resume-first cockpit experience so a fresh agent or human can quickly s
 
 ## Progress Log
 - [2026-05-28] Created as Phase 1 implementation initiative from philosophy alignment roadmap.
+- [2026-05-29] Implemented: WorkflowEngine.setActiveInitiative and resumeAt methods, mdocs_resume tool returns next action/blockers/latest progress/validation, mdocs_status enriched with resume info for active initiative. Full TDD with RED/GREEN evidence. All tests pass, TypeScript build passes.
 
 ## Artifacts
 - `src/plugin.ts` — custom tool implementation target
