@@ -571,7 +571,7 @@ related_wiki: ["developer/missing"]
     const commandResult = await (plugin as any).tool.mdocs.execute({ command: 'validate', args: {} });
 
     expect(toolResult.valid).toBe(false);
-    expect(toolResult.initiatives.errors).toEqual(expect.arrayContaining([expect.stringContaining('broken--2026-05-29.md references missing wiki entry: developer/missing')]));
+    expect(toolResult.initiatives.warnings).toEqual(expect.arrayContaining([expect.stringContaining('broken--2026-05-29.md references missing wiki entry: developer/missing')]));
     expect(toolResult.wiki.errors).toEqual(expect.arrayContaining([expect.stringContaining('developer/bad.md missing id')]));
     expect(commandResult).toEqual(toolResult);
   });

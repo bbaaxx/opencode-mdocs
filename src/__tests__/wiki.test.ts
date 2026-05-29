@@ -255,4 +255,55 @@ Content`, 'utf8');
       expect.stringContaining('architecture/missing-fields.md missing category')
     ]));
   });
+
+  test('validate warns for wiki entries not referenced by initiatives', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'orphan',
+      title: 'Orphan',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'No initiative points here'
+    });
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/orphan.md is not referenced by any initiative')
+    ]));
+  });
+
+  test('validate does not warn when wiki entry is referenced by an initiative', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'referenced',
+      title: 'Referenced',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'An initiative points here'
+    });
+    const initiativesDir = path.join(testDir, 'initiatives');
+    fs.mkdirSync(initiativesDir, { recursive: true });
+    fs.writeFileSync(path.join(initiativesDir, 'uses-wiki.md'), `---
+id: "uses-wiki"
+title: "Uses Wiki"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["architecture/referenced"]
+---
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.warnings).not.toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/referenced.md is not referenced by any initiative')
+    ]));
+  });
 });

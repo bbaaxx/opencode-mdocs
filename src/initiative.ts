@@ -337,9 +337,9 @@ export class InitiativeManager {
       for (const ref of initiative.relatedWiki || []) {
         const [category, id, ...rest] = ref.split('/');
         if (!isSafePathSegment(category) || !isSafePathSegment(id) || rest.length > 0) {
-          errors.push(`${fileName} has unsafe wiki reference: ${ref}`);
+          warnings.push(`${fileName} has unsafe wiki reference: ${ref}`);
         } else if (!fs.existsSync(path.join(wikiRoot, category, `${id}.md`))) {
-          errors.push(`${fileName} references missing wiki entry: ${ref}`);
+          warnings.push(`${fileName} references missing wiki entry: ${ref}`);
         }
       }
     }

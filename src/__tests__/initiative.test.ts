@@ -364,7 +364,7 @@ No priority
     expect(sorted.map(i => i.id)).toEqual(['critical', 'critical-later', 'high', 'low']);
   });
 
-  test('validate reports duplicate ids, missing required fields, broken wiki refs, and index drift', () => {
+  test('validate reports duplicate ids, missing required fields, broken wiki warnings, and index drift', () => {
     const manager = new InitiativeManager(testDir);
     const initiativesDir = path.join(testDir, 'initiatives');
     const wikiDir = path.join(testDir, 'wiki', 'architecture');
@@ -411,10 +411,10 @@ related_wiki: ["architecture/missing"]
       expect.stringContaining('Duplicate initiative id "duplicate"'),
       expect.stringContaining('two.md missing title'),
       expect.stringContaining('two.md missing status'),
-      expect.stringContaining('two.md missing created'),
-      expect.stringContaining('two.md references missing wiki entry: architecture/missing')
+      expect.stringContaining('two.md missing created')
     ]));
     expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('two.md references missing wiki entry: architecture/missing'),
       expect.stringContaining('INDEX.md lists missing initiative file: ghost.md'),
       expect.stringContaining('INDEX.md missing initiative file: two.md')
     ]));
@@ -434,7 +434,7 @@ related_wiki: ["architecture/missing"]
     expect(() => manager.update('other--2026-05-31.md', { ...other, id: 'shared' })).toThrow('Duplicate initiative id "shared"');
   });
 
-  test('validate rejects unsafe related_wiki path segments without resolving outside wiki root', () => {
+  test('validate warns for unsafe related_wiki path segments without resolving outside wiki root', () => {
     const manager = new InitiativeManager(testDir);
     const initiativesDir = path.join(testDir, 'initiatives');
     const escapedSecretDir = path.join(testDir, 'secret');
@@ -459,8 +459,9 @@ related_wiki: ["../secret/foo"]
 
     const result = manager.validate();
 
-    expect(result.valid).toBe(false);
-    expect(result.errors).toEqual(expect.arrayContaining([
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual(expect.arrayContaining([
       expect.stringContaining('unsafe-wiki--2026-05-29.md has unsafe wiki reference: ../secret/foo')
     ]));
   });
