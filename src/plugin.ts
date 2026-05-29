@@ -52,10 +52,14 @@ export function createPlugin(baseDir: string) {
     const validationResult = () => {
       const initiativeValidation = initiatives.validate();
       const wikiValidation = wiki.validate();
+      const graphResults = new MdocsLinter(mdocsRoot).lintAll();
+      const graphErrors = graphResults.flatMap(r => r.issues.filter(i => i.severity === 'error').map(i => `${r.file}: ${i.message}`));
+      const graphWarnings = graphResults.flatMap(r => r.issues.filter(i => i.severity !== 'error').map(i => `${r.file}: ${i.message}`));
       return {
         initiatives: initiativeValidation,
         wiki: wikiValidation,
-        valid: initiativeValidation.valid && wikiValidation.valid
+        graph: { valid: graphErrors.length === 0, errors: graphErrors, warnings: graphWarnings, results: graphResults },
+        valid: initiativeValidation.valid && wikiValidation.valid && graphErrors.length === 0
       };
     };
 

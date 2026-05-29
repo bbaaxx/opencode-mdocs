@@ -609,6 +609,16 @@ Existing file
     expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), 'utf8')).toContain('Command Tool');
   });
 
+  test('mdocs_validate includes graph lint results', async () => {
+    const plugin = createPlugin(testDir);
+    await (plugin as any).tool.mdocs_init.execute();
+
+    const result = await (plugin as any).tool.mdocs_validate.execute();
+
+    expect(result.graph).toBeDefined();
+    expect(result.graph.results).toEqual(expect.any(Array));
+  });
+
   test('mdocs_validate tool and mdocs validate command return combined validation results', async () => {
     const plugin = createPlugin(testDir);
     (plugin as any).tool.mdocs_init.execute();
