@@ -609,6 +609,16 @@ Existing file
     expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), 'utf8')).toContain('Command Tool');
   });
 
+  test('mdocs_validate includes graph lint results', async () => {
+    const plugin = createPlugin(testDir);
+    await (plugin as any).tool.mdocs_init.execute();
+
+    const result = await (plugin as any).tool.mdocs_validate.execute();
+
+    expect(result.graph).toBeDefined();
+    expect(result.graph.results).toEqual(expect.any(Array));
+  });
+
   test('mdocs_validate tool and mdocs validate command return combined validation results', async () => {
     const plugin = createPlugin(testDir);
     (plugin as any).tool.mdocs_init.execute();
@@ -689,6 +699,45 @@ related_wiki: []
     const unknown = await (plugin as any).tool.mdocs.execute({ command: 'nope', args: {} });
     expect(unknown.error).toContain('Unsupported mdocs command: nope');
     expect(unknown.supportedCommands).toContain('initiative.create');
+  });
+
+  test('mdocs_resume returns next action, blockers, latest progress, and validation', async () => {
+    const plugin = createPlugin(testDir);
+    await (plugin as any).tool.mdocs_init.execute();
+    const initDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initDir, 'resume--2026-05-29.md'), `---
+id: "resume"
+title: "Resume Cockpit"
+status: "active"
+created: "2026-05-29"
+updated: "2026-05-29"
+owner: "agent"
+tags: ["resume"]
+related_wiki: []
+next_action: "Continue with dispatch retrieval."
+blockers: ["Need metadata"]
+---
+
+## Objective
+Help fresh agents resume.
+
+## Plan
+- [ ] Add cockpit
+
+## Progress Log
+- Baseline captured
+- Metadata added
+
+## Artifacts
+`, 'utf8');
+
+    const result = await (plugin as any).tool.mdocs_resume.execute({ initiativeId: 'resume' });
+
+    expect(result.initiative.id).toBe('resume');
+    expect(result.nextAction).toBe('Continue with dispatch retrieval.');
+    expect(result.blockers).toEqual(['Need metadata']);
+    expect(result.latestProgress).toBe('Metadata added');
+    expect(result.validation).toBeDefined();
   });
 });
 
@@ -791,11 +840,71 @@ describe('Config Hook', () => {
       'mdocs_dispatch',
       'mdocs_init',
       'mdocs_lookup',
+      'mdocs_resume',
       'mdocs_search',
       'mdocs_status',
       'mdocs_validate'
     ]);
     expect(plugin.tools).toBeUndefined();
+  });
+
+  test('mdocs_dispatch includes search-ranked memory and recent audit events', async () => {
+    const plugin = createPlugin(testDir);
+    await (plugin as any).tool.mdocs_init.execute();
+    const initDir = path.join(testDir, 'mdocs', 'initiatives');
+    fs.writeFileSync(path.join(initDir, 'dispatch--2026-05-29.md'), `---
+id: "dispatch"
+title: "Dispatch Memory"
+status: "active"
+created: "2026-05-29"
+updated: "2026-05-29"
+owner: "agent"
+tags: ["memory"]
+related_wiki: []
+---
+
+## Objective
+Improve durable memory retrieval.
+
+## Plan
+- [ ] Add retrieval
+
+## Progress Log
+- Baseline captured
+
+## Artifacts
+- src/subagent.ts
+`, 'utf8');
+    const wikiDir = path.join(testDir, 'mdocs', 'wiki', 'architecture');
+    fs.mkdirSync(wikiDir, { recursive: true });
+    fs.writeFileSync(path.join(wikiDir, 'durable-memory.md'), `---
+id: "durable-memory"
+title: "Durable Memory"
+category: "architecture"
+created: "2026-05-29"
+updated: "2026-05-29"
+related_initiatives: ["dispatch"]
+tags: ["memory"]
+---
+
+Durable memory retrieval should include snippets for fresh agents.
+`, 'utf8');
+    // Set the active initiative and step so audit events are tagged with the initiative id
+    fs.writeFileSync(path.join(testDir, 'mdocs', '.workflow-state.json'), JSON.stringify({
+      currentStep: 'PLAN',
+      activeInitiative: 'dispatch',
+      stepHistory: [{ step: 'PLAN', timestamp: new Date().toISOString() }]
+    }, null, 2), 'utf8');
+
+    // Re-create plugin to pick up updated workflow state
+    const pluginWithState = createPlugin(testDir);
+    await (pluginWithState as any)['tool.execute.after']({ name: 'read', args: { filePath: 'src/subagent.ts' } }, {});
+
+    const result = await (pluginWithState as any).tool.mdocs_dispatch.execute({ initiativeId: 'dispatch' });
+
+    expect(result.context).toContain('## Retrieved Memory');
+    expect(result.context).toContain('Durable Memory');
+    expect(result.context).toContain('## Recent Activity');
   });
 
   test('default export returns plugin with current opencode tool hook', async () => {

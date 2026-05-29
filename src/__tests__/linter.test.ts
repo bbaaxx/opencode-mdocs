@@ -294,4 +294,52 @@ This is a wiki entry with enough content to pass the linter quality checks.
     expect(result.passed).toBe(false);
     expect(result.issues[0].message).toContain('not in initiatives');
   });
+
+  test('lintAll reports broken wiki backlinks and missing completion memory', () => {
+    const initiativesDir = path.join(testDir, 'initiatives');
+    const wikiDir = path.join(testDir, 'wiki', 'architecture');
+    fs.mkdirSync(initiativesDir, { recursive: true });
+    fs.mkdirSync(wikiDir, { recursive: true });
+    fs.writeFileSync(path.join(initiativesDir, 'done--2026-05-29.md'), `---
+id: "done"
+title: "Done Initiative"
+status: "done"
+created: "2026-05-29"
+updated: "2026-05-29"
+tags: ["memory"]
+related_wiki: ["architecture/decision"]
+---
+
+## Objective
+Capture durable memory after completion.
+
+## Plan
+- [x] Finish work
+
+## Progress Log
+- Done
+
+## Artifacts
+`, 'utf8');
+    fs.writeFileSync(path.join(wikiDir, 'decision.md'), `---
+id: "decision"
+title: "Decision"
+category: "architecture"
+created: "2026-05-29"
+updated: "2026-05-29"
+related_initiatives: []
+tags: ["memory"]
+---
+
+This decision should link back to the initiative.
+`, 'utf8');
+
+    const linter = new MdocsLinter(testDir);
+    const messages = linter.lintAll().flatMap(r => r.issues.map(i => i.message));
+
+    expect(messages).toEqual(expect.arrayContaining([
+      expect.stringContaining('Wiki architecture/decision missing backlink to initiative done'),
+      expect.stringContaining('Done initiative done has no stable wiki learning')
+    ]));
+  });
 });

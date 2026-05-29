@@ -1,10 +1,10 @@
 ---
 id: upgrade-dispatch-memory-retrieval
 title: Upgrade Dispatch into Memory Retrieval Assembly
-status: active
+status: done
 priority: high
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-05-29
 owner: bbaaxx
 tags: [phase-1, dispatch, memory, retrieval, subagent]
 related_wiki: [philosophy/core-principles, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
@@ -58,6 +58,7 @@ Upgrade `mdocs_dispatch` from a thin concatenation of manually linked wiki entri
 
 ## Progress Log
 - [2026-05-28] Created as Phase 1 implementation initiative from philosophy alignment roadmap.
+- [2026-05-29] Implemented: SearchResult extended with snippet and matchedFields, SubagentAssembler enriched with handoff/blockers/retrieved memory/recent activity, mdocs_dispatch queries search engine and audit log for context assembly. Full TDD with RED/GREEN evidence. All tests pass, TypeScript build passes.
 
 ## Artifacts
 - `src/subagent.ts` — context assembly implementation target

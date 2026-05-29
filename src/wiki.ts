@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { WikiEntry } from './types';
+import { WikiEntry, parseFrontmatter } from './types';
 
 export class WikiManager {
   private dir: string;
@@ -11,7 +11,7 @@ export class WikiManager {
   }
 
   private toFrontmatter(entry: WikiEntry): string {
-    const front = {
+    const front: Record<string, any> = {
       id: entry.id,
       title: entry.title,
       category: entry.category,
@@ -20,6 +20,11 @@ export class WikiManager {
       related_initiatives: entry.relatedInitiatives,
       tags: entry.tags,
     };
+    if (entry.lifecycle) front.lifecycle = entry.lifecycle;
+    if (entry.knowledgeType) front.knowledge_type = entry.knowledgeType;
+    if (entry.confidence) front.confidence = entry.confidence;
+    if (entry.sourceInitiatives && entry.sourceInitiatives.length > 0) front.source_initiatives = entry.sourceInitiatives;
+    if (entry.supersedes && entry.supersedes.length > 0) front.supersedes = entry.supersedes;
     return `---\n${Object.entries(front).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n\n`;
   }
 
@@ -53,21 +58,8 @@ export class WikiManager {
   }
 
   private parseWikiEntry(content: string): WikiEntry {
-    const match = content.match(/---\n([\s\S]*?)\n---/);
-    if (!match) throw new Error('Invalid wiki entry format');
-
-    const front: Record<string, any> = {};
-    for (const line of match[1].split('\n')) {
-      const [key, ...valueParts] = line.split(':');
-      if (key && valueParts.length > 0) {
-        const value = valueParts.join(':').trim();
-        try {
-          front[key.trim()] = JSON.parse(value);
-        } catch {
-          front[key.trim()] = value;
-        }
-      }
-    }
+    const front = parseFrontmatter(content);
+    if (!Object.keys(front).length) throw new Error('Invalid wiki entry format');
 
     const body = content.replace(/---\n[\s\S]*?\n---/, '').trim();
 
@@ -79,7 +71,12 @@ export class WikiManager {
       updated: front.updated || '',
       relatedInitiatives: Array.isArray(front.related_initiatives) ? front.related_initiatives : [],
       tags: Array.isArray(front.tags) ? front.tags : [],
-      content: body
+      content: body,
+      lifecycle: front.lifecycle || undefined,
+      knowledgeType: front.knowledge_type || undefined,
+      confidence: front.confidence || undefined,
+      sourceInitiatives: Array.isArray(front.source_initiatives) ? front.source_initiatives : undefined,
+      supersedes: Array.isArray(front.supersedes) ? front.supersedes : undefined
     };
   }
 

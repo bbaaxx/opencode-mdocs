@@ -52,10 +52,18 @@ export function createPlugin(baseDir: string) {
     const validationResult = () => {
       const initiativeValidation = initiatives.validate();
       const wikiValidation = wiki.validate();
+      const allLintResults = new MdocsLinter(mdocsRoot).lintAll();
+      // Separate file-quality lint from graph-level lint
+      const fileResults = allLintResults.filter(r => r.file !== 'GRAPH');
+      const graphResults = allLintResults.filter(r => r.file === 'GRAPH');
+      const fileErrors = fileResults.flatMap(r => r.issues.filter(i => i.severity === 'error').map(i => `${r.file}: ${i.message}`));
+      const graphErrors = graphResults.flatMap(r => r.issues.filter(i => i.severity === 'error').map(i => `${r.file}: ${i.message}`));
+      const graphWarnings = graphResults.flatMap(r => r.issues.filter(i => i.severity !== 'error').map(i => `${r.file}: ${i.message}`));
       return {
         initiatives: initiativeValidation,
         wiki: wikiValidation,
-        valid: initiativeValidation.valid && wikiValidation.valid
+        graph: { valid: graphErrors.length === 0, errors: graphErrors, warnings: graphWarnings, results: graphResults },
+        valid: initiativeValidation.valid && wikiValidation.valid && graphErrors.length === 0
       };
     };
 
@@ -232,7 +240,12 @@ export function createPlugin(baseDir: string) {
                     })).filter((item: any) => item.description)
                   : [],
                 progressLog: [`[${new Date().toISOString()}] Created initiative via mdocs command`],
-                artifacts: []
+                artifacts: [],
+                phase: args.phase || undefined,
+                handoffSummary: args.handoffSummary || undefined,
+                openQuestions: Array.isArray(args.openQuestions) ? args.openQuestions : undefined,
+                blockers: Array.isArray(args.blockers) ? args.blockers : undefined,
+                nextAction: args.nextAction || undefined,
               });
               return { success: true, filename: path.basename(filePath), id };
             }
@@ -244,11 +257,13 @@ export function createPlugin(baseDir: string) {
               const initiative = initiatives.read(fileName);
               if (!initiative) return { error: `Initiative not found: ${args.id}` };
               const updates = args.updates || args;
-              for (const field of ['status', 'tags', 'priority', 'dueDate', 'dependsOn', 'owner']) {
+              for (const field of ['status', 'tags', 'priority', 'dueDate', 'dependsOn', 'owner', 'phase', 'handoffSummary', 'nextAction']) {
                 if (updates[field] !== undefined) {
                   (initiative as any)[field] = updates[field];
                 }
               }
+              if (updates.openQuestions !== undefined) initiative.openQuestions = Array.isArray(updates.openQuestions) ? updates.openQuestions : undefined;
+              if (updates.blockers !== undefined) initiative.blockers = Array.isArray(updates.blockers) ? updates.blockers : undefined;
               initiative.updated = date;
               if (args.progressNote) initiative.progressLog.push(args.progressNote);
               const filePath = initiatives.update(fileName, initiative);
@@ -278,7 +293,12 @@ export function createPlugin(baseDir: string) {
                 updated: date,
                 content: args.content || '',
                 relatedInitiatives: Array.isArray(args.relatedInitiatives) ? args.relatedInitiatives : [],
-                tags: Array.isArray(args.tags) ? args.tags : []
+                tags: Array.isArray(args.tags) ? args.tags : [],
+                lifecycle: args.lifecycle || undefined,
+                knowledgeType: args.knowledgeType || undefined,
+                confidence: args.confidence || undefined,
+                sourceInitiatives: Array.isArray(args.sourceInitiatives) ? args.sourceInitiatives : undefined,
+                supersedes: Array.isArray(args.supersedes) ? args.supersedes : undefined,
               });
               return { success: true, filename: path.join(path.basename(path.dirname(filePath)), path.basename(filePath)), id: args.id };
             }
@@ -318,6 +338,34 @@ export function createPlugin(baseDir: string) {
             const activeInitiatives = allInitiatives.filter(i => i.status === 'active');
             const blocked = initiatives.findBlocked();
             const overdue = initiatives.findOverdue();
+
+            // Last activity from audit log
+            const recentAudit = audit.query({ limit: 1 });
+            const lastActivity = recentAudit.length > 0 ? recentAudit[0].timestamp : null;
+
+            // Add resume info for the active initiative
+            let resume: any = undefined;
+            if (state.activeInitiative) {
+              const activeInit = allInitiatives.find(i => i.id === state.activeInitiative);
+              if (activeInit) {
+                const currentPlanItem = activeInit.plan.find(p => p.status === 'in-progress') || activeInit.plan.find(p => p.status !== 'done');
+                const lastUpdated = activeInit.updated;
+                const daysSinceUpdate = lastUpdated ? Math.floor((Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                const staleWarning = daysSinceUpdate !== null && daysSinceUpdate > 3;
+
+                resume = {
+                  initiative: { id: activeInit.id, title: activeInit.title, status: activeInit.status },
+                  currentStep: state.currentStep || 'IDLE',
+                  nextAction: activeInit.nextAction || activeInit.plan.find(p => p.status !== 'done')?.description || '',
+                  currentPlanItem: currentPlanItem ? { description: currentPlanItem.description, status: currentPlanItem.status } : null,
+                  blockers: activeInit.blockers || [],
+                  latestProgress: activeInit.progressLog.at(-1) || '',
+                  lastUpdated,
+                  staleWarning
+                };
+              }
+            }
+
             return {
               workflow: {
                 currentStep: state.currentStep || 'IDLE',
@@ -328,7 +376,9 @@ export function createPlugin(baseDir: string) {
                 id: i.id || '',
                 title: i.title || '',
                 status: i.status || 'active',
-                created: i.created || ''
+                created: i.created || '',
+                nextAction: i.nextAction || i.plan.find(p => p.status !== 'done')?.description || '',
+                blockers: i.blockers || []
               })),
               blocked: blocked.map(i => ({
                 id: i.id || '',
@@ -340,6 +390,8 @@ export function createPlugin(baseDir: string) {
                 title: i.title || '',
                 dueDate: i.dueDate || ''
               })),
+              lastActivity,
+              resume,
               validation: validationResult()
             };
           } catch (err: any) {
@@ -448,8 +500,15 @@ export function createPlugin(baseDir: string) {
             }
           }
 
+          // Retrieve search-ranked memory
+          const searchQuery = `${initiative.title} ${initiative.objective} ${initiative.tags.join(' ')}`;
+          const retrievedMemory = search.query(searchQuery).slice(0, 5);
+
+          // Retrieve recent audit events for this initiative
+          const recentEvents = audit.query({ initiativeId: initiative.id, limit: 5 });
+
           const currentStep = workflow.getCurrentStep();
-          const context = assembler.assemble(initiative, wikiEntries, currentStep);
+          const context = assembler.assemble(initiative, wikiEntries, currentStep, { retrievedMemory, recentEvents });
 
           return {
             context,
@@ -467,6 +526,54 @@ export function createPlugin(baseDir: string) {
             limit: args.limit
           });
           return { events };
+        }
+      },
+      mdocs_resume: {
+        description: "Resume active or specified initiative with next action and validation",
+        execute: async (args: { initiativeId?: string }) => {
+          try {
+            const initiativeId = args?.initiativeId || workflow.status().activeInitiative;
+            if (!initiativeId) {
+              // No active initiative — return resumable initiatives with recommendations
+              const initiativesDir = path.join(mdocsRoot, 'initiatives');
+              const allInitiatives = fs.existsSync(initiativesDir)
+                ? fs.readdirSync(initiativesDir)
+                    .filter(f => f.endsWith('.md') && f !== 'INDEX.md')
+                    .map(f => { try { return { init: initiatives.read(f), file: f }; } catch { return null; } })
+                    .filter((i): i is NonNullable<typeof i> => i !== null && i.init !== null)
+                : [];
+              const resumable = allInitiatives
+                .filter(({ init }) => init !== null && init.status === 'active')
+                .map(({ init }) => {
+                  const nextAction = init!.nextAction || init!.plan.find(p => p.status !== 'done')?.description || '';
+                  const daysSinceUpdate = Math.floor((Date.now() - new Date(init!.updated).getTime()) / (1000 * 60 * 60 * 24));
+                  return {
+                    id: init!.id,
+                    title: init!.title,
+                    nextAction,
+                    blockers: init!.blockers || [],
+                    lastUpdated: init!.updated,
+                    recommendation: daysSinceUpdate > 3 ? 'stale — consider updating progress' : (init!.blockers?.length ? 'blocked — resolve blockers first' : 'ready to resume')
+                  };
+                });
+              return { resumable, recommendation: resumable.length > 0 ? 'Specify initiativeId to resume one of the above' : 'No active initiatives to resume' };
+            }
+            const fileName = findInitiativeFilename(initiativeId);
+            if (!fileName) return { error: `Initiative not found: ${initiativeId}` };
+            const initiative = initiatives.read(fileName);
+            if (!initiative) return { error: `Initiative not found: ${initiativeId}` };
+            workflow.setActiveInitiative(initiative.id);
+            return {
+              initiative: { id: initiative.id, title: initiative.title, status: initiative.status },
+              currentStep: workflow.status().currentStep,
+              nextAction: initiative.nextAction || initiative.plan.find(p => p.status !== 'done')?.description || '',
+              blockers: initiative.blockers || [],
+              latestProgress: initiative.progressLog.at(-1) || '',
+              validation: validationResult()
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
         }
       }
     }

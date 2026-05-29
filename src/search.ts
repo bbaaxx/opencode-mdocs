@@ -136,7 +136,8 @@ export class SearchEngine {
     const tokens = this.tokenize(query);
     if (tokens.length === 0) return [];
 
-    const scores = new Map<string, { type: 'initiative' | 'wiki'; title: string; score: number }>();
+    // Track matched fields and field-level scores per document
+    const scores = new Map<string, { type: 'initiative' | 'wiki'; title: string; score: number; fieldScores: Map<string, number> }>();
 
     for (const token of tokens) {
       const docMap = this.index.get(token);
@@ -144,9 +145,11 @@ export class SearchEngine {
 
       for (const [docId, entry] of docMap) {
         if (!scores.has(docId)) {
-          scores.set(docId, { type: entry.type, title: entry.title, score: 0 });
+          scores.set(docId, { type: entry.type, title: entry.title, score: 0, fieldScores: new Map() });
         }
-        scores.get(docId)!.score += entry.freq;
+        const doc = scores.get(docId)!;
+        doc.score += entry.freq;
+        doc.fieldScores.set(entry.field, (doc.fieldScores.get(entry.field) || 0) + entry.freq);
       }
     }
 
@@ -172,15 +175,61 @@ export class SearchEngine {
         if (date && date > options.dateTo) continue;
       }
 
+      // Determine best matching field and snippet
+      const matchedFields = Array.from(data.fieldScores.keys());
+      const bestField = matchedFields.reduce((a, b) => data.fieldScores.get(a)! > data.fieldScores.get(b)! ? a : b, matchedFields[0]);
+      const snippet = this.getSnippet(docId, bestField);
+
       results.push({
         type: data.type,
         id: docId,
         title: data.title,
-        score: data.score
+        score: data.score,
+        snippet,
+        matchedFields
       });
     }
 
     // Sort by score descending
     return results.sort((a, b) => b.score - a.score);
+  }
+
+  /**
+   * Get a snippet (first 180 chars) from the best-matching field for a document.
+   */
+  private getSnippet(docId: string, field: string): string {
+    // Reconstruct the field content from index entries
+    const tokens: string[] = [];
+    for (const [term, docMap] of this.index) {
+      if (docMap.has(docId) && docMap.get(docId)!.field === field) {
+        // This is a matched term - we need the original content for snippet
+      }
+    }
+    // For snippets, read the actual content
+    if (docId.includes('/')) {
+      // Wiki entry
+      const [category, id] = docId.split('/');
+      try {
+        const entry = this.wiki.read(category, id);
+        if (entry) {
+          const text = field === 'title' ? entry.title : entry.content;
+          return text.replace(/\s+/g, ' ').slice(0, 180);
+        }
+      } catch { /* fall through */ }
+    } else {
+      // Initiative
+      try {
+        const initiative = this.initiatives.findById(docId);
+        if (initiative) {
+          let text = '';
+          if (field === 'title') text = initiative.title;
+          else if (field === 'objective') text = initiative.objective;
+          else if (field === 'plan') text = initiative.plan.map(p => p.description).join(' ');
+          else if (field === 'progressLog') text = initiative.progressLog.join(' ');
+          return text.replace(/\s+/g, ' ').slice(0, 180);
+        }
+      } catch { /* fall through */ }
+    }
+    return '';
   }
 }

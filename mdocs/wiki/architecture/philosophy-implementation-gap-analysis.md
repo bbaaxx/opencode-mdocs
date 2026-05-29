@@ -95,3 +95,18 @@ opencode-mdocs already implements the skeleton of its philosophy: initiatives, w
 3. **Memory semantics** — Initiative and wiki schemas should encode their philosophical roles.
 4. **Graph integrity** — Links, dependencies, artifacts, and provenance should be first-class.
 5. **Distributed safety** — Multiple facets need identity, revisions, locks, and conflict recovery.
+
+## Phase 1 Gap Closure
+
+The following gaps were addressed in Phase 1:
+
+| Gap | Phase 1 Closure |
+|-----|-----------------|
+| Resume/discovery UX is manual and underpowered | `mdocs_resume` tool returns next action, blockers, latest progress, and validation; `mdocs_status` enriched with resume info |
+| Dispatch context is thin | `mdocs_dispatch` now includes search-ranked memory, audit events, handoff summary, blockers, and artifacts |
+| Wiki entries lack memory semantics | v2 wiki metadata: lifecycle, knowledgeType, confidence, sourceInitiatives, supersedes |
+| Initiative/wiki boundary is mostly conventional | v2 initiative metadata: phase, handoffSummary, openQuestions, blockers, nextAction |
+| Cross-links are weakly validated | Graph linter checks broken links, missing backlinks, and done initiative completion gates |
+| Initiative completion does not enforce promotion of stable learnings | Graph linter warns when done initiatives have no wiki entry with `lifecycle: stable` |
+
+Remaining gaps (Phase 2+): agent/session identity, atomic writes, summarization and compaction, flexible wiki organization, richer human views.

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { LintResult, LintIssue } from './types';
+import { LintResult, LintIssue, parseFrontmatter } from './types';
 
 export class MdocsLinter {
   private baseDir: string;
@@ -55,7 +55,123 @@ export class MdocsLinter {
       }
     }
 
+    results.push(...this.lintGraph());
+
     return results;
+  }
+
+  private lintGraph(): LintResult[] {
+    const issues: LintIssue[] = [];
+    const initiativesDir = path.join(this.baseDir, 'initiatives');
+    const wikiDir = path.join(this.baseDir, 'wiki');
+
+    // Collect all initiative data
+    const initiativeData: { id: string; status: string; relatedWiki: string[]; filePath: string }[] = [];
+    if (fs.existsSync(initiativesDir)) {
+      const files = fs.readdirSync(initiativesDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+      for (const f of files) {
+        try {
+          const content = fs.readFileSync(path.join(initiativesDir, f), 'utf8');
+          const front = parseFrontmatter(content);
+          initiativeData.push({
+            id: front.id || '',
+            status: front.status || 'active',
+            relatedWiki: Array.isArray(front.related_wiki) ? front.related_wiki : [],
+            filePath: f
+          });
+        } catch { /* skip */ }
+      }
+    }
+
+    // Collect all wiki data
+    const wikiData: { id: string; category: string; relatedInitiatives: string[]; lifecycle?: string; filePath: string }[] = [];
+    if (fs.existsSync(wikiDir)) {
+      const categories = fs.readdirSync(wikiDir).filter(f => fs.statSync(path.join(wikiDir, f)).isDirectory());
+      for (const category of categories) {
+        const catDir = path.join(wikiDir, category);
+        const files = fs.readdirSync(catDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+        for (const f of files) {
+          try {
+            const content = fs.readFileSync(path.join(catDir, f), 'utf8');
+            const front = parseFrontmatter(content);
+            const id = front.id || f.replace('.md', '');
+            wikiData.push({
+              id,
+              category: front.category || category,
+              relatedInitiatives: Array.isArray(front.related_initiatives) ? front.related_initiatives : [],
+              lifecycle: front.lifecycle,
+              filePath: `${category}/${f}`
+            });
+          } catch { /* skip */ }
+        }
+      }
+    }
+
+    const initiativeIds = new Set(initiativeData.map(i => i.id));
+    const wikiRefs = new Set(wikiData.map(w => `${w.category}/${w.id}`));
+
+    // Check initiative related_wiki
+    for (const init of initiativeData) {
+      for (const wikiRef of init.relatedWiki) {
+        // Broken reference
+        if (!wikiRefs.has(wikiRef)) {
+          issues.push({
+            severity: 'warning',
+            message: `Initiative ${init.id} references missing wiki ${wikiRef}`
+          });
+        }
+      }
+
+      // Done initiative should have at least one stable wiki learning
+      if (init.status === 'done') {
+        const stableWikiLinks = init.relatedWiki.filter(ref => {
+          const wikiEntry = wikiData.find(w => `${w.category}/${w.id}` === ref);
+          return wikiEntry && wikiEntry.lifecycle === 'stable';
+        });
+        if (stableWikiLinks.length === 0) {
+          issues.push({
+            severity: 'warning',
+            message: `Done initiative ${init.id} has no stable wiki learning`
+          });
+        }
+      }
+    }
+
+    // Check wiki related_initiatives and backlinks
+    for (const wiki of wikiData) {
+      // Broken initiative reference
+      for (const initRef of wiki.relatedInitiatives) {
+        if (!initiativeIds.has(initRef)) {
+          issues.push({
+            severity: 'warning',
+            message: `Wiki ${wiki.category}/${wiki.id} references missing initiative ${initRef}`
+          });
+        }
+      }
+
+      // Check backlinks: initiatives referencing this wiki should have this initiative in their backlinks
+      for (const init of initiativeData) {
+        if (init.relatedWiki.includes(`${wiki.category}/${wiki.id}`)) {
+          // Initiative references this wiki entry - check if wiki has backlink
+          if (!wiki.relatedInitiatives.includes(init.id)) {
+            issues.push({
+              severity: 'warning',
+              message: `Wiki ${wiki.category}/${wiki.id} missing backlink to initiative ${init.id}`
+            });
+          }
+        }
+      }
+    }
+
+    if (issues.length === 0) return [];
+
+    return [{
+      file: 'GRAPH',
+      type: 'initiative',
+      score: 0,
+      issues,
+      passed: false
+    }];
   }
 
   private lintInitiative(content: string, filePath: string): LintResult {

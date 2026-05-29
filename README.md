@@ -222,11 +222,13 @@ The agent will:
 The plugin provides custom tools:
 
 - **`mdocs_init`** — Manually initialize the `/mdocs` structure
-- **`mdocs_status`** — Show current workflow state and active initiatives
-- **`mdocs_search`** — Search across initiatives and wiki by keyword
-- **`mdocs_dispatch`** — Assemble subagent context from an initiative and its related wiki entries
+- **`mdocs_status`** — Show current workflow state, active initiatives, resume info (current plan item, stale warnings), and last activity
+- **`mdocs_search`** — Search across initiatives and wiki by keyword (returns snippets and matched fields)
+- **`mdocs_dispatch`** — Assemble subagent context from an initiative, its related wiki entries, search-ranked memory, and recent audit events. Includes handoff summary, blockers, progress, and retrieved memory sections.
 - **`mdocs_audit`** — Query the audit log for events (filter by initiative, type, date)
-- **`mdocs_lint`** — Lint initiatives and wiki entries for handoff readiness
+- **`mdocs_validate`** — Validate initiative/wiki integrity, cross-link graph (broken refs, missing backlinks, completion gates)
+- **`mdocs_resume`** — Resume an initiative with next action, blockers, latest progress, and validation. Without an ID, lists all resumable initiatives with recommendations.
+- **`mdocs_lookup`** — Resolve an initiative by id, title, slug, or filename
 
 ### Managing Initiatives
 
