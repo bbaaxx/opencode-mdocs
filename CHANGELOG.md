@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-05-31
+
+### Added
+
+- Added aggregate `mdocs` custom tool for initiative and wiki operations, including create/update/done/archive/delete/list, validation, and index sync commands.
+- Added `mdocs_validate`, `mdocs_lookup`, and `mdocs_resume` tools for integrity checks, exact initiative resolution, and workflow handoff recovery.
+- Expanded `mdocs_dispatch` context with search-ranked memory, recent audit events, blockers, handoff metadata, and related wiki context.
+- Added wiki/initiative graph validation for broken references, missing backlinks, and completion-gate warnings.
+
+### Changed
+
+- Improved README tool documentation to reflect the full current custom tool surface.
+- Included `CHANGELOG.md` in published package contents.
+- Excluded compiled test files from release build artifacts.
+
+### Fixed
+
+- Wrapped custom tool results in object shapes expected by opencode custom tool contracts.
+- Updated the integration smoke script to validate the current `plugin.tool` API.
+
 ## [1.0.2] - 2026-05-28
 
 ### Fixed

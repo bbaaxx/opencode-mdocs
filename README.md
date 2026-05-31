@@ -221,6 +221,7 @@ The agent will:
 
 The plugin provides custom tools:
 
+- **`mdocs`** — Run initiative/wiki maintenance commands such as `initiative.create`, `initiative.update`, `initiative.done`, `initiative.archive`, `initiative.delete`, `wiki.create`, `wiki.delete`, `wiki.list`, `validate`, and `index.sync`
 - **`mdocs_init`** — Manually initialize the `/mdocs` structure
 - **`mdocs_status`** — Show current workflow state, active initiatives, resume info (current plan item, stale warnings), and last activity
 - **`mdocs_search`** — Search across initiatives and wiki by keyword (returns snippets and matched fields)
@@ -270,7 +271,7 @@ The plugin registers these opencode hooks:
 | `tool.execute.after` | Log tool calls to active initiative |
 | `event` | Record significant events (workflow advances, creates) |
 | `permission.ask` | Auto-allow tools aligned with current step |
-| `tool` | Register `mdocs_init` and `mdocs_status` |
+| `tool` | Register `mdocs`, `mdocs_init`, `mdocs_status`, `mdocs_validate`, `mdocs_search`, `mdocs_lookup`, `mdocs_dispatch`, `mdocs_audit`, and `mdocs_resume` |
 
 ## Development
 

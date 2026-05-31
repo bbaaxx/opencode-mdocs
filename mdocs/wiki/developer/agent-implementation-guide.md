@@ -16,7 +16,7 @@ You are implementing three initiatives for the `opencode-mdocs` plugin. Work in 
 
 ## Current State
 
-- **Version**: 1.0.2
+- **Version**: 1.1.0
 - **Tests**: 90/90 passing, `npm test` and `npm run build` both pass.
 - **Source files to know**:
   - `src/plugin.ts` — exports `tool` object with `mdocs_init`, `mdocs_status`, `mdocs_search`, `mdocs_dispatch`, `mdocs_audit`. Custom tools go here.

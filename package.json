@@ -1,6 +1,6 @@
 {
   "name": "opencode-mdocs",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Opencode plugin for initiative/wiki workflow management",
   "license": "MIT",
   "author": "bbaaxx",
@@ -27,7 +27,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "test": "jest",
     "prepublishOnly": "npm run build",
     "setup:local": "mkdir -p .opencode/agents && ln -sf ../../agents/mdocs-orchestrator.md .opencode/agents/mdocs-orchestrator.md"
@@ -49,6 +49,7 @@
     "dist",
     "skills",
     "agents",
-    "templates"
+    "templates",
+    "CHANGELOG.md"
   ]
 }
