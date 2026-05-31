@@ -1,18 +1,18 @@
 ---
 id: complete-mdocs-cli-commands
 title: Complete mdocs CLI Commands (delete, archive, index.sync)
-status: active
+status: done
 priority: high
 created: 2026-05-29
-updated: 2026-05-29
+updated: 2026-05-31
 owner: bbaaxx
 tags: [enhancement, cli, commands, initiatives, delete, archive]
 related_wiki: []
-phase: planning
-handoff_summary: "Current mdocs command tool supports create/update/done/wiki.create/validate; delete/archive/index.sync/wiki.delete/wiki.list remain to implement with TDD."
+phase: done
+handoff_summary: "Implemented initiative.delete, initiative.archive, index.sync, wiki.delete, wiki.list commands with TDD."
 open_questions: []
 blockers: []
-next_action: "Hand this implementation plan to a coder agent; start with Task 1 RED tests in src/__tests__/plugin.test.ts."
+next_action: "Complete. All commands implemented, tested, and verified."
 ---
 
 ## Objective
@@ -646,6 +646,13 @@ If review passes, set frontmatter `status: done`, `phase: done`, clear blockers,
 - [2026-05-29] Created initiative from edge case testing: missing delete, archive, index.sync, wiki.delete, wiki.list commands.
 - [2026-05-29] Will implement after INITIATIVE 2 (add-mdocs-cli-commands) is complete, building on its mdocs tool structure.
 - [2026-05-29] Added detailed coder handoff plan after analyzing `src/plugin.ts`, `src/initiative.ts`, `src/wiki.ts`, existing plugin command tests, and prior CLI-command initiative. Plan sequences implementation through TDD tasks for `initiative.delete`, `wiki.delete`, `wiki.list`, `index.sync`, `initiative.archive`, docs, full verification, and independent review.
+- [2026-05-31] TDD Implementation completed by coder subagent:
+  - RED: All 7 new tests written first; verified failure for unsupported commands.
+  - GREEN: Implemented `initiative.delete`, `initiative.archive`, `wiki.delete`, `wiki.list`, `index.sync` commands.
+  - Files modified: `src/plugin.ts` (+48), `src/initiative.ts` (+41), `src/wiki.ts` (+31), `src/__tests__/plugin.test.ts` (+171).
+  - Verification: `npm test` → 143 tests pass (11 suites); `npm run build` → clean; `npm pack --dry-run` → success; `mdocs_validate` → valid=true, 0 errors.
+  - Independent review: PASS (no blocking issues). Defense-in-depth noted for archive status check in both plugin and initiative layers.
+  - Updated `skills/mdocs-workflow/SKILL.md` with maintenance commands documentation.
 
 ## Artifacts
 - `mdocs/initiatives/complete-mdocs-cli-commands--2026-05-29.md` — this initiative

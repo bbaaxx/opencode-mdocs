@@ -139,6 +139,37 @@ export class WikiManager {
     }
   }
 
+  list(category?: string): WikiEntry[] {
+    const categories = category
+      ? [this.sanitizeName(category)]
+      : fs.readdirSync(this.dir).filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
+
+    const entries: WikiEntry[] = [];
+    for (const cat of categories) {
+      const catDir = path.join(this.dir, cat);
+      if (!fs.existsSync(catDir)) continue;
+      const files = fs.readdirSync(catDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+      for (const fileName of files) {
+        try {
+          const entry = this.read(cat, fileName.replace(/\.md$/, ''));
+          if (entry) entries.push(entry);
+        } catch {
+        }
+      }
+    }
+    return entries.sort((a, b) => `${a.category}/${a.id}`.localeCompare(`${b.category}/${b.id}`));
+  }
+
+  syncIndices(): string[] {
+    this.updateIndices();
+    const paths = [path.join(this.dir, 'INDEX.md')];
+    const categories = fs.readdirSync(this.dir).filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
+    for (const category of categories) {
+      paths.push(path.join(this.dir, category, 'INDEX.md'));
+    }
+    return paths;
+  }
+
   findRelated(queryTags: string[]): WikiEntry[] {
     const categories = fs.readdirSync(this.dir)
       .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());

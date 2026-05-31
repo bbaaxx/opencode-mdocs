@@ -225,6 +225,30 @@ export class InitiativeManager {
     }
   }
 
+  syncIndex(): string {
+    this.updateIndex();
+    return path.join(this.dir, 'INDEX.md');
+  }
+
+  archive(fileName: string): { archivedFilename: string; archiveIndex: string } {
+    const sanitized = this.sanitizeFileName(fileName);
+    const sourcePath = path.join(this.dir, sanitized);
+    if (!fs.existsSync(sourcePath)) throw new Error(`Initiative file not found: ${sanitized}`);
+    const initiative = this.read(sanitized);
+    if (!initiative) throw new Error(`Initiative file not found: ${sanitized}`);
+    if (initiative.status !== 'done') throw new Error(`Only done initiatives can be archived: ${initiative.id}`);
+
+    const archiveDir = path.join(this.dir, 'archive');
+    fs.mkdirSync(archiveDir, { recursive: true });
+    const targetPath = path.join(archiveDir, sanitized);
+    if (fs.existsSync(targetPath)) throw new Error(`Archived initiative already exists: ${sanitized}`);
+
+    fs.renameSync(sourcePath, targetPath);
+    this.updateIndex();
+    this.updateArchiveIndex();
+    return { archivedFilename: sanitized, archiveIndex: path.join(archiveDir, 'INDEX.md') };
+  }
+
   findById(id: string): Initiative | null {
     const all = this.listAll();
     return all.find(i => i.id === id) || null;
@@ -372,6 +396,23 @@ export class InitiativeManager {
       }
     }
     return initiatives;
+  }
+
+  private updateArchiveIndex(): void {
+    const archiveDir = path.join(this.dir, 'archive');
+    fs.mkdirSync(archiveDir, { recursive: true });
+    const files = fs.readdirSync(archiveDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+    const entries: { initiative: Initiative; fileName: string }[] = [];
+    for (const f of files) {
+      try {
+        const content = fs.readFileSync(path.join(archiveDir, f), 'utf8');
+        const init = this.parseInitiative(content, f);
+        entries.push({ initiative: init, fileName: f });
+      } catch {
+      }
+    }
+    const lines = entries.map(({ initiative: i, fileName }) => `- **${i.title}** (${i.status}) — ${fileName} — ${i.created} — [${i.tags.join(', ')}]`);
+    fs.writeFileSync(path.join(archiveDir, 'INDEX.md'), `# Archived Initiatives\n\n${lines.join('\n') || 'No archived initiatives yet.'}`, 'utf8');
   }
 
   private updateIndex(): void {

@@ -37,3 +37,12 @@ When dispatching subagents, include:
 - Recent audit events for the initiative
 - Current step constraints
 - Verification criteria
+
+## Maintenance Commands
+
+Use the `mdocs` command tool for safe filesystem-changing maintenance:
+- `initiative.delete` removes an initiative and regenerates `initiatives/INDEX.md`.
+- `initiative.archive` moves a done initiative to `initiatives/archive/` and regenerates active/archive indices.
+- `wiki.delete` removes a wiki entry and regenerates wiki indices.
+- `wiki.list` lists wiki entries, optionally filtered by category.
+- `index.sync` force-regenerates initiative and wiki indices after direct file edits.

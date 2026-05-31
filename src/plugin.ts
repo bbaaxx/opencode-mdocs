@@ -33,7 +33,11 @@ export function createPlugin(baseDir: string) {
       'initiative.create',
       'initiative.update',
       'initiative.done',
+      'initiative.delete',
+      'initiative.archive',
       'wiki.create',
+      'wiki.delete',
+      'wiki.list',
       'validate',
       'index.sync'
     ];
@@ -303,8 +307,50 @@ export function createPlugin(baseDir: string) {
               return { success: true, filename: path.join(path.basename(path.dirname(filePath)), path.basename(filePath)), id: args.id };
             }
 
+            if (command === 'initiative.delete') {
+              if (!args.id) return { error: 'initiative.delete requires id' };
+              const fileName = findInitiativeFilename(args.id);
+              if (!fileName) return { error: `Initiative not found: ${args.id}` };
+              initiatives.delete(fileName);
+              return { success: true, id: args.id, deletedFilename: fileName };
+            }
+
+            if (command === 'initiative.archive') {
+              if (!args.id) return { error: 'initiative.archive requires id' };
+              const fileName = findInitiativeFilename(args.id);
+              if (!fileName) return { error: `Initiative not found: ${args.id}` };
+              const initiative = initiatives.read(fileName);
+              if (!initiative) return { error: `Initiative not found: ${args.id}` };
+              if (initiative.status !== 'done') return { error: `Only done initiatives can be archived: ${args.id}` };
+              const result = initiatives.archive(fileName);
+              return { success: true, id: args.id, archivedFilename: result.archivedFilename };
+            }
+
+            if (command === 'wiki.delete') {
+              if (!args.category || !args.id) return { error: 'wiki.delete requires category and id' };
+              if (!wiki.read(args.category, args.id)) return { error: `Wiki entry not found: ${args.category}/${args.id}` };
+              wiki.delete(args.category, args.id);
+              return { success: true, category: args.category, id: args.id, deletedFilename: `${args.category}/${args.id}.md` };
+            }
+
+            if (command === 'wiki.list') {
+              const entries = wiki.list(args.category).map(entry => ({
+                category: entry.category,
+                id: entry.id,
+                title: entry.title,
+                tags: entry.tags
+              }));
+              return { entries };
+            }
+
             if (command === 'validate') return validationResult();
-            if (command === 'index.sync') return { error: 'index.sync not yet implemented' };
+            if (command === 'index.sync') {
+              const regenerated = [
+                path.relative(mdocsRoot, initiatives.syncIndex()),
+                ...wiki.syncIndices().map(filePath => path.relative(mdocsRoot, filePath))
+              ];
+              return { success: true, regenerated };
+            }
 
             return { error: `Unsupported mdocs command: ${command}`, supportedCommands: supportedMdocsCommands };
           } catch (err: any) {

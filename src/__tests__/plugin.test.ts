@@ -694,11 +694,178 @@ related_wiki: []
     await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.update', args: {} })).resolves.toEqual({ error: 'initiative.update requires id' });
     await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.done', args: { id: 'missing' } })).resolves.toEqual({ error: 'Initiative not found: missing' });
     await expect((plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'developer', id: 'missing-title' } })).resolves.toEqual({ error: 'wiki.create requires category, id, and title' });
-    await expect((plugin as any).tool.mdocs.execute({ command: 'index.sync', args: {} })).resolves.toEqual({ error: 'index.sync not yet implemented' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.delete', args: {} }))
+      .resolves.toEqual({ error: 'initiative.delete requires id' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.delete', args: { id: 'missing' } }))
+      .resolves.toEqual({ error: 'Initiative not found: missing' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.archive', args: {} }))
+      .resolves.toEqual({ error: 'initiative.archive requires id' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'wiki.delete', args: { category: 'developer' } }))
+      .resolves.toEqual({ error: 'wiki.delete requires category and id' });
 
     const unknown = await (plugin as any).tool.mdocs.execute({ command: 'nope', args: {} });
     expect(unknown.error).toContain('Unsupported mdocs command: nope');
-    expect(unknown.supportedCommands).toContain('initiative.create');
+    expect(unknown.supportedCommands).toEqual(expect.arrayContaining([
+      'initiative.create',
+      'initiative.update',
+      'initiative.done',
+      'initiative.delete',
+      'initiative.archive',
+      'wiki.create',
+      'wiki.delete',
+      'wiki.list',
+      'validate',
+      'index.sync'
+    ]));
+  });
+
+  test('mdocs initiative.delete removes initiative file and updates index', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'delete-me',
+      title: 'Delete Me',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: ['cleanup'],
+      relatedWiki: [],
+      objective: 'Remove obsolete work.',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    const result = await (plugin as any).tool.mdocs.execute({ command: 'initiative.delete', args: { id: 'delete-me' } });
+
+    expect(result).toEqual({ success: true, id: 'delete-me', deletedFilename: 'delete-me--2026-05-29.md' });
+    expect(fs.existsSync(path.join(testDir, 'mdocs', 'initiatives', 'delete-me--2026-05-29.md'))).toBe(false);
+    const index = fs.readFileSync(path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md'), 'utf8');
+    expect(index).not.toContain('Delete Me');
+  });
+
+  test('mdocs wiki.delete removes entry and updates indices', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+
+    await (plugin as any).tool.mdocs.execute({
+      command: 'wiki.create',
+      args: { category: 'developer', id: 'obsolete', title: 'Obsolete', content: 'Remove me.', tags: ['cleanup'] }
+    });
+
+    const result = await (plugin as any).tool.mdocs.execute({ command: 'wiki.delete', args: { category: 'developer', id: 'obsolete' } });
+
+    expect(result).toEqual({ success: true, category: 'developer', id: 'obsolete', deletedFilename: 'developer/obsolete.md' });
+    expect(fs.existsSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'obsolete.md'))).toBe(false);
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), 'utf8')).not.toContain('Obsolete');
+  });
+
+  test('mdocs wiki.list returns all entries or filters by category', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    await (plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'developer', id: 'commands', title: 'Commands', content: 'Command docs.', tags: ['cli'] } });
+    await (plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'architecture', id: 'storage', title: 'Storage', content: 'Storage docs.', tags: ['architecture'] } });
+
+    const all = await (plugin as any).tool.mdocs.execute({ command: 'wiki.list', args: {} });
+    const developer = await (plugin as any).tool.mdocs.execute({ command: 'wiki.list', args: { category: 'developer' } });
+
+    expect(all.entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'developer', id: 'commands', title: 'Commands', tags: ['cli'] }),
+      expect.objectContaining({ category: 'architecture', id: 'storage', title: 'Storage', tags: ['architecture'] })
+    ]));
+    expect(developer.entries).toEqual([
+      expect.objectContaining({ category: 'developer', id: 'commands', title: 'Commands', tags: ['cli'] })
+    ]);
+  });
+
+  test('mdocs index.sync regenerates initiative and wiki indices', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'sync-me',
+      title: 'Sync Me',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: ['index'],
+      relatedWiki: [],
+      objective: 'Regenerate indices.',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+    await (plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'developer', id: 'index-doc', title: 'Index Doc', content: 'Index docs.' } });
+
+    fs.writeFileSync(path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md'), '# Initiatives\n\nStale', 'utf8');
+    fs.writeFileSync(path.join(testDir, 'mdocs', 'wiki', 'INDEX.md'), '# Wiki\n\nStale', 'utf8');
+    fs.writeFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), '# developer\n\nStale', 'utf8');
+
+    const result = await (plugin as any).tool.mdocs.execute({ command: 'index.sync', args: {} });
+
+    expect(result).toEqual({
+      success: true,
+      regenerated: expect.arrayContaining(['initiatives/INDEX.md', 'wiki/INDEX.md', 'wiki/developer/INDEX.md'])
+    });
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md'), 'utf8')).toContain('Sync Me');
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'INDEX.md'), 'utf8')).toContain('[developer](developer/INDEX.md)');
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'wiki', 'developer', 'INDEX.md'), 'utf8')).toContain('Index Doc');
+  });
+
+  test('mdocs initiative.archive moves done initiative to archive and updates indices', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'archive-me',
+      title: 'Archive Me',
+      status: 'done',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: ['archive'],
+      relatedWiki: [],
+      objective: 'Archive completed work.',
+      plan: [],
+      progressLog: ['Completed'],
+      artifacts: []
+    });
+
+    const result = await (plugin as any).tool.mdocs.execute({ command: 'initiative.archive', args: { id: 'archive-me' } });
+
+    expect(result).toEqual({ success: true, id: 'archive-me', archivedFilename: 'archive-me--2026-05-29.md' });
+    expect(fs.existsSync(path.join(testDir, 'mdocs', 'initiatives', 'archive-me--2026-05-29.md'))).toBe(false);
+    expect(fs.existsSync(path.join(testDir, 'mdocs', 'initiatives', 'archive', 'archive-me--2026-05-29.md'))).toBe(true);
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md'), 'utf8')).not.toContain('Archive Me');
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'initiatives', 'archive', 'INDEX.md'), 'utf8')).toContain('Archive Me');
+  });
+
+  test('mdocs initiative.archive rejects missing and active initiatives', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'not-done',
+      title: 'Not Done',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Still active.',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.archive', args: { id: 'missing' } }))
+      .resolves.toEqual({ error: 'Initiative not found: missing' });
+    await expect((plugin as any).tool.mdocs.execute({ command: 'initiative.archive', args: { id: 'not-done' } }))
+      .resolves.toEqual({ error: 'Only done initiatives can be archived: not-done' });
   });
 
   test('mdocs_resume returns next action, blockers, latest progress, and validation', async () => {

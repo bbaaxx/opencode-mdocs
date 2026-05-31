@@ -4,7 +4,7 @@
 - **Fix Initiative Filename/Slug UX Issues** (done) — 2026-05-29 — [bug, ux, initiatives, filename, slug, discovery]
 - **Add mdocs CLI Commands for Initiative and Wiki Operations** (done) — 2026-05-29 — [enhancement, cli, commands, initiatives, wiki, automation]
 - **Add Validation for Initiatives and Wiki References** (done) — 2026-05-29 — [enhancement, validation, initiatives, wiki, integrity]
-- **Complete mdocs CLI Commands (delete, archive, index.sync)** (active) — 2026-05-29 — [enhancement, cli, commands, initiatives, delete, archive]
+- **Complete mdocs CLI Commands (delete, archive, index.sync)** (done) — 2026-05-29 — [enhancement, cli, commands, initiatives, delete, archive]
 - **Add INDEX Auto-Sync and Consistency Utilities** (active) — 2026-05-29 — [enhancement, index, sync, consistency, automation]
 - **Add Bidirectional Wiki-Initiative Links and Back-Link Generation** (active) — 2026-05-29 — [enhancement, wiki, links, back-reference, cross-reference]
 - **Add Wiki Stub Generation and Auto-Create from Initiative Links** (active) — 2026-05-29 — [enhancement, wiki, stub, auto-create, templates]
