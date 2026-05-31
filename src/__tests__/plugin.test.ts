@@ -1015,6 +1015,22 @@ describe('Config Hook', () => {
     expect(plugin.tools).toBeUndefined();
   });
 
+  test('all custom tools expose explicit arg schemas for opencode runtime', () => {
+    const plugin = createPlugin(testDir) as any;
+
+    for (const [name, definition] of Object.entries(plugin.tool) as Array<[string, any]>) {
+      expect(definition.description).toBeTruthy();
+      expect(definition.args).toBeDefined();
+      expect(typeof definition.execute).toBe('function');
+      if (['mdocs_init', 'mdocs_status', 'mdocs_validate'].includes(name)) {
+        expect(definition.args).toEqual({});
+      }
+    }
+    expect(plugin.tool.mdocs.args.command).toBeDefined();
+    expect(plugin.tool.mdocs_dispatch.args.initiativeId).toBeDefined();
+    expect(plugin.tool.mdocs_resume.args.initiativeId).toBeDefined();
+  });
+
   test('mdocs_dispatch includes search-ranked memory and recent audit events', async () => {
     const plugin = createPlugin(testDir);
     await (plugin as any).tool.mdocs_init.execute();
@@ -1080,5 +1096,16 @@ Durable memory retrieval should include snippets for fresh agents.
     const hooks = await pluginDefault({ client: {}, project: {}, directory: testDir });
 
     expect((hooks as any).tool.mdocs_status).toBeDefined();
+  });
+
+  test('default export wraps custom tool results in opencode ToolResult shape', async () => {
+    const hooks = await pluginDefault({ client: {}, project: {}, directory: testDir }) as any;
+    await hooks.tool.mdocs_init.execute({});
+
+    const result = await hooks.tool.mdocs_status.execute({});
+
+    expect(typeof result.output).toBe('string');
+    expect(result.output).toContain('"workflow"');
+    expect(result.metadata.workflow).toBeDefined();
   });
 });

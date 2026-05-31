@@ -8,6 +8,7 @@
 - **Add INDEX Auto-Sync and Consistency Utilities** (active) — 2026-05-29 — [enhancement, index, sync, consistency, automation]
 - **Add Bidirectional Wiki-Initiative Links and Back-Link Generation** (active) — 2026-05-29 — [enhancement, wiki, links, back-reference, cross-reference]
 - **Add Wiki Stub Generation and Auto-Create from Initiative Links** (active) — 2026-05-29 — [enhancement, wiki, stub, auto-create, templates]
+- **Fix mdocs First Activation Hook Error** (done) — 2026-05-31 — [bug, plugin, hooks, tools, orchestrator, activation]
 - **Fix v1 opencode Plugin Compatibility** (done) — 2026-05-28 — [bug, compatibility, v1, plugin, config, agent, tools]
 - **Upgrade Dispatch into Memory Retrieval Assembly** (done) — 2026-05-28 — [phase-1, dispatch, memory, retrieval, subagent]
 - **Add Resume and Status Cockpit** (done) — 2026-05-28 — [phase-1, resume, status, ux, workflow]

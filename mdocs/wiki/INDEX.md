@@ -11,6 +11,9 @@
 ### decisions
 - **Opencode Plugin Tool Registration API** — `decisions/opencode-tool-registration.md`
 
+### developer
+- **Opencode Custom Tool Result Contract** — `developer/opencode-custom-tool-result-contract.md`
+
 ### philosophy
 - **Core Principles** — `philosophy/core-principles.md`
 - **Origin Narrative** — `philosophy/origin-narrative.md`
@@ -24,6 +27,7 @@
 - **Original Plugin Design Spec** — architecture/plugin-design-spec.md
 - **Original Implementation Plan** — architecture/implementation-plan.md
 - **Opencode Plugin Tool Registration API** — decisions/opencode-tool-registration.md
+- **Opencode Custom Tool Result Contract** — developer/opencode-custom-tool-result-contract.md
 - **Core Principles** — philosophy/core-principles.md
 - **Origin Narrative** — philosophy/origin-narrative.md
 - **Philosophy-to-Implementation Gap Analysis** — architecture/philosophy-implementation-gap-analysis.md

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { z } from 'zod';
 import { MdocsManager } from './mdocs';
 import { InitiativeManager } from './initiative';
 import { WikiManager } from './wiki';
@@ -218,6 +219,10 @@ export function createPlugin(baseDir: string) {
     tool: {
       mdocs: {
         description: "Run mdocs initiative/wiki commands",
+        args: {
+          command: z.string().describe('Command name, e.g. initiative.create, initiative.update, validate, index.sync'),
+          args: z.record(z.string(), z.any()).optional().describe('Command-specific arguments')
+        },
         execute: async (input: { command: string; args: any }) => {
           try {
             const command = input?.command;
@@ -360,6 +365,7 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_init: {
         description: "Initialize /mdocs folder structure",
+        args: {},
         execute: async () => {
           try {
             mdocs.init();
@@ -371,6 +377,7 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_status: {
         description: "Show current workflow state and active initiatives",
+        args: {},
         execute: async () => {
           try {
             const state = workflow.status();
@@ -447,6 +454,7 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_validate: {
         description: "Validate mdocs initiative and wiki integrity",
+        args: {},
         execute: async () => {
           try {
             return validationResult();
@@ -457,6 +465,16 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_search: {
         description: "Search across initiatives and wiki by keyword",
+        args: {
+          query: z.string().describe('Search query'),
+          filters: z.object({
+            tags: z.array(z.string()).optional(),
+            status: z.string().optional(),
+            category: z.string().optional(),
+            dateFrom: z.string().optional(),
+            dateTo: z.string().optional()
+          }).optional().describe('Optional search filters')
+        },
         execute: async (args: { query: string; filters?: { tags?: string[]; status?: string; category?: string; dateFrom?: string; dateTo?: string } }) => {
           try {
             const results = search.query(args?.query || '', args?.filters || {});
@@ -475,6 +493,10 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_lookup: {
         description: "Resolve an initiative by id, title, slug, or filename",
+        args: {
+          query: z.string().describe('Initiative id, title, slug, or filename to resolve'),
+          field: z.enum(['id', 'title', 'slug']).optional().describe('Optional field to constrain lookup')
+        },
         execute: async (args: { query: string; field?: 'id' | 'title' | 'slug' }) => {
           try {
             const query = args?.query || '';
@@ -524,6 +546,9 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_dispatch: {
         description: "Assemble subagent context from an initiative and its related wiki entries",
+        args: {
+          initiativeId: z.string().optional().describe('Initiative id to assemble context for; defaults to active initiative')
+        },
         execute: async (args: { initiativeId?: string }) => {
           const initiativeId = args.initiativeId || workflow.status().activeInitiative;
           if (!initiativeId) {
@@ -566,6 +591,10 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_audit: {
         description: "Query the audit log for events",
+        args: {
+          initiativeId: z.string().optional().describe('Optional initiative id to filter audit events'),
+          limit: z.number().optional().describe('Maximum number of audit events to return')
+        },
         execute: async (args: { initiativeId?: string; limit?: number }) => {
           const events = audit.query({
             initiativeId: args.initiativeId,
@@ -576,6 +605,9 @@ export function createPlugin(baseDir: string) {
       },
       mdocs_resume: {
         description: "Resume active or specified initiative with next action and validation",
+        args: {
+          initiativeId: z.string().optional().describe('Initiative id to resume; defaults to active initiative')
+        },
         execute: async (args: { initiativeId?: string }) => {
           try {
             const initiativeId = args?.initiativeId || workflow.status().activeInitiative;

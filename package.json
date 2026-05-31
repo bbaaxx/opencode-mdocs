@@ -35,6 +35,9 @@
   "peerDependencies": {
     "@opencode-ai/plugin": "^1.0.0"
   },
+  "dependencies": {
+    "zod": "^4.1.8"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
