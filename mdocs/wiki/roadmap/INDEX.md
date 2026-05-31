@@ -1,6 +1,3 @@
-# Roadmap
+# roadmap
 
-## Categories
-
-### roadmap
-- **Philosophy Alignment Roadmap** — `roadmap/philosophy-alignment-roadmap.md`
+- Philosophy Alignment Roadmap

@@ -8,8 +8,8 @@ owner: "opencode-mdocs"
 tags: ["release","v1.1.0"]
 related_wiki: ["release/v1-1-0-readiness"]
 priority: "medium"
-phase: "verification"
-next_action: "Review the release-prep diff, commit changes, tag v1.1.0, publish to npm, push tag, and create a GitHub release."
+phase: "done"
+next_action: "Release v1.1.0 is published to npm and GitHub; no further release action required."
 ---
 
 ## Objective
@@ -26,6 +26,7 @@ Prepare the repository for a v1.1.0 release by reviewing current changes, valida
 - [2026-05-31T23:34:43.679Z] Created initiative via mdocs command
 - [2026-05-31T23:45:00.000Z] Prepared v1.1.0 release artifacts: bumped package and lockfile to 1.1.0, added changelog notes, updated README tool docs, fixed test-run.js for plugin.tool, excluded compiled tests from release dist, created release readiness wiki entry, and verified tests/build/smoke/pack/mdocs validation.
 - [2026-05-31T23:41:21.056Z] Marked done via mdocs command
+- [2026-05-31T23:50:00.000Z] Published opencode-mdocs@1.1.0 to npm, pushed main and tag v1.1.0 to origin, created GitHub release https://github.com/bbaaxx/opencode-mdocs/releases/tag/v1.1.0, and updated release wiki with final links/status.
 
 ## Artifacts
 - `CHANGELOG.md` — v1.1.0 release notes.
