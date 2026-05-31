@@ -653,6 +653,7 @@ If review passes, set frontmatter `status: done`, `phase: done`, clear blockers,
   - Verification: `npm test` → 143 tests pass (11 suites); `npm run build` → clean; `npm pack --dry-run` → success; `mdocs_validate` → valid=true, 0 errors.
   - Independent review: PASS (no blocking issues). Defense-in-depth noted for archive status check in both plugin and initiative layers.
   - Updated `skills/mdocs-workflow/SKILL.md` with maintenance commands documentation.
+- [2026-05-31] Added full tool catalog to `agents/mdocs-orchestrator.md` — closes agent discovery gap so fresh sessions know all commands without trial-and-error.
 
 ## Artifacts
 - `mdocs/initiatives/complete-mdocs-cli-commands--2026-05-29.md` — this initiative
