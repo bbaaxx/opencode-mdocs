@@ -6,7 +6,7 @@ created: "2026-06-01"
 updated: "2026-06-01"
 owner: ""
 tags: ["release","v1.2.0"]
-related_wiki: ["testing/new-features-playbook","release/v1-2-0-readiness"]
+related_wiki: ["testing/new-features-playbook","release/v1-2-0-readiness","release/v1-1-0-readiness"]
 priority: "medium"
 ---
 

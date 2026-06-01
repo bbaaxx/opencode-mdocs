@@ -3,9 +3,14 @@ id: agent-implementation-guide
 title: Fresh Agent Implementation Guide
 category: developer
 created: 2026-05-29
-updated: 2026-05-29
-related_initiatives: [fix-slug-initiative-ux, add-mdocs-cli-commands, add-initiatives-wiki-validation]
+updated: 2026-06-01
+related_initiatives: [fix-slug-initiative-ux, add-mdocs-cli-commands, add-initiatives-wiki-validation, consolidate-docs-superpowers]
 tags: [developer, guide, implementation, handoff]
+lifecycle: stable
+knowledge_type: implementation-guide
+confidence: high
+source_initiatives: [fix-slug-initiative-ux, add-mdocs-cli-commands, add-initiatives-wiki-validation]
+supersedes: []
 ---
 
 # Fresh Agent Implementation Guide: mdocs UX Improvements

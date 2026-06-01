@@ -6,7 +6,7 @@ created: 2026-05-27
 updated: 2026-05-27
 owner: system
 tags: [enhancement, quality, automation, linting]
-related_wiki: []
+related_wiki: ["architecture/mdocs-tool-gates"]
 ---
 
 ## Objective

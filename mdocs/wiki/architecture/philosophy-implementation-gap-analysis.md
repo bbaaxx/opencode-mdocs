@@ -4,7 +4,7 @@ title: Philosophy-to-Implementation Gap Analysis
 category: architecture
 created: 2026-05-28
 updated: 2026-05-28
-related_initiatives: [align-implementation-with-philosophy, define-v2-memory-metadata, upgrade-dispatch-memory-retrieval, add-resume-status-cockpit, add-cross-link-graph-linter]
+related_initiatives: [align-implementation-with-philosophy, define-v2-memory-metadata, upgrade-dispatch-memory-retrieval, add-resume-status-cockpit, add-cross-link-graph-linter, clean-up-graph-warnings]
 tags: [philosophy, architecture, ux, memory, gap-analysis]
 lifecycle: stable
 knowledge_type: architecture

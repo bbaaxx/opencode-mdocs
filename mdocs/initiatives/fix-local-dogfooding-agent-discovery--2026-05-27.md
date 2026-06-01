@@ -6,7 +6,7 @@ created: 2026-05-27
 updated: 2026-05-27
 owner: system
 tags: [bug, dogfooding, local-development, agent, config]
-related_wiki: []
+related_wiki: ["architecture/plugin-design-spec"]
 ---
 
 ## Objective

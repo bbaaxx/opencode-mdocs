@@ -6,7 +6,7 @@ created: 2026-05-27
 updated: 2026-05-27
 owner: system
 tags: [bug, plugin, tools]
-related_wiki: []
+related_wiki: ["decisions/opencode-tool-registration"]
 ---
 
 ## Objective

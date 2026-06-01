@@ -7,7 +7,7 @@ created: 2026-05-29
 updated: 2026-05-29
 owner: bbaaxx
 tags: [enhancement, cli, commands, initiatives, wiki, automation]
-related_wiki: []
+related_wiki: ["architecture/mdocs-tool-gates"]
 ---
 
 ## Objective

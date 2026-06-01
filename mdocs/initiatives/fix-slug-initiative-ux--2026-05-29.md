@@ -7,7 +7,7 @@ created: 2026-05-29
 updated: 2026-05-29
 owner: bbaaxx
 tags: [bug, ux, initiatives, filename, slug, discovery]
-related_wiki: []
+related_wiki: ["developer/agent-implementation-guide"]
 ---
 
 ## Objective

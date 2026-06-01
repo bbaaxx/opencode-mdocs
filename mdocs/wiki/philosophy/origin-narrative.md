@@ -3,8 +3,14 @@ id: origin-narrative
 title: Origin Narrative — The Philosophy Behind opencode-mdocs
 category: philosophy
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-06-01
+related_initiatives: [align-implementation-with-philosophy]
 tags: [philosophy, origin, memory, distributed-agents]
+lifecycle: stable
+knowledge_type: foundational-narrative
+confidence: high
+source_initiatives: [align-implementation-with-philosophy]
+supersedes: []
 ---
 
 # Origin Narrative

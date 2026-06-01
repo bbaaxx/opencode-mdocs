@@ -6,7 +6,7 @@ created: 2026-05-27
 updated: 2026-05-27
 owner: system
 tags: [release, v1, milestone, quality]
-related_wiki: []
+related_wiki: ["architecture/implementation-plan"]
 ---
 
 ## Objective

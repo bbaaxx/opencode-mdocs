@@ -3,9 +3,14 @@ id: opencode-tool-registration
 title: Opencode Plugin Tool Registration API
 category: decisions
 created: 2026-05-27
-updated: 2026-05-27
-related_initiatives: [fix-mdocs-status-error]
+updated: 2026-06-01
+related_initiatives: [fix-mdocs-status-error, fix-frontmatter-type-mismatch]
 tags: [plugin, api, tools, opencode]
+lifecycle: stable
+knowledge_type: fix-pattern
+confidence: high
+source_initiatives: [fix-mdocs-status-error]
+supersedes: []
 ---
 
 ## Problem

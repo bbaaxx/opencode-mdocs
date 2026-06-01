@@ -7,7 +7,7 @@ created: 2026-05-29
 updated: 2026-05-31
 owner: bbaaxx
 tags: [enhancement, cli, commands, initiatives, delete, archive]
-related_wiki: []
+related_wiki: ["architecture/mdocs-tool-gates"]
 phase: done
 handoff_summary: "Implemented initiative.delete, initiative.archive, index.sync, wiki.delete, wiki.list commands with TDD."
 open_questions: []

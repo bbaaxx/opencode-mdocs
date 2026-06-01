@@ -3,9 +3,14 @@ id: mdocs-tool-gates
 title: mdocs Tool Gate Exemptions
 category: architecture
 created: 2026-05-27
-updated: 2026-05-27
-related_initiatives: [mdocs-autonomy]
+updated: 2026-06-01
+related_initiatives: [mdocs-autonomy, complete-mdocs-cli-commands, remove-default-model, add-full-text-search, add-mdocs-linter-for-handoff-quality, add-initiatives-wiki-validation, add-audit-log-and-event-history, add-wiki-bidirectional-links, add-index-sync-and-consistency, add-mdocs-cli-commands, add-checkable-plan-items, add-initiative-priorities-and-dependencies, add-wiki-stub-generation, add-wiki-manager-crud, fix-mdocs-permissions, auto-register-agent-and-skills, add-mdocs-dispatch-tool, clean-up-graph-warnings]
 tags: [workflow, permissions, gates]
+lifecycle: stable
+knowledge_type: workflow-design-rule
+confidence: high
+source_initiatives: [mdocs-autonomy]
+supersedes: []
 ---
 
 ## Overview

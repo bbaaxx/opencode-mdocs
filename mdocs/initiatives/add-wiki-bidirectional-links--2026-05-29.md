@@ -6,7 +6,7 @@ created: "2026-05-29"
 updated: "2026-06-01"
 owner: "bbaaxx"
 tags: ["enhancement","wiki","links","back-reference","cross-reference"]
-related_wiki: []
+related_wiki: ["architecture/mdocs-tool-gates"]
 priority: "medium"
 ---
 

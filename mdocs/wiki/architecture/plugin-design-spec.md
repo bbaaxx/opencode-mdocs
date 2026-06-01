@@ -3,9 +3,14 @@ id: plugin-design-spec
 title: Original Plugin Design Spec
 category: architecture
 created: 2026-05-27
-updated: 2026-05-27
-related_initiatives: [install-mdocs]
+updated: 2026-06-01
+related_initiatives: [install-mdocs, align-implementation-with-philosophy, fix-local-dogfooding-agent-discovery, fix-v1-opencode-compatibility]
 tags: [blueprint, architecture, design, history]
+lifecycle: stable
+knowledge_type: historical-blueprint
+confidence: high
+source_initiatives: [install-mdocs, align-implementation-with-philosophy]
+supersedes: []
 ---
 
 > **Historical Note:** This document is the original design specification created *before* the plugin was implemented. It served as the blueprint for building opencode-mdocs. Some details may differ from the final implementation.

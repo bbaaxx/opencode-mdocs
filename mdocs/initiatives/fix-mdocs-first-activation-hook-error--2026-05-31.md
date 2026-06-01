@@ -6,7 +6,7 @@ created: 2026-05-31
 updated: 2026-05-31
 owner: system
 tags: [bug, plugin, hooks, tools, orchestrator, activation]
-related_wiki: [developer/opencode-custom-tool-result-contract]
+related_wiki: ["developer/opencode-custom-tool-result-contract"]
 phase: done
 handoff_summary: "Fixed and user-confirmed. Root cause: mdocs custom tools returned raw JSON objects, but opencode custom tools expect a ToolResult string or `{ output: string }`; the UI/bridge called `.split` on missing `output`. Default plugin export now wraps custom tool returns into `{ output: JSON.stringify(...), metadata: ... }`. Explicit args schemas were also added. Tests/build pass and fresh-session user retest confirmed the popup is gone."
 open_questions: []

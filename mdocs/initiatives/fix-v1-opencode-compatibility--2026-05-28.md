@@ -7,7 +7,7 @@ created: 2026-05-28
 updated: 2026-05-28
 owner: bbaaxx
 tags: [bug, compatibility, v1, plugin, config, agent, tools]
-related_wiki: []
+related_wiki: ["architecture/plugin-design-spec"]
 ---
 
 ## Objective

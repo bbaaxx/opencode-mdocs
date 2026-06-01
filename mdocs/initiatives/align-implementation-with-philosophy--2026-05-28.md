@@ -7,7 +7,7 @@ created: 2026-05-28
 updated: 2026-05-29
 owner: bbaaxx
 tags: [roadmap, philosophy, architecture, ux, memory]
-related_wiki: [philosophy/core-principles, philosophy/origin-narrative, architecture/plugin-design-spec, architecture/implementation-plan, architecture/philosophy-implementation-gap-analysis, roadmap/philosophy-alignment-roadmap]
+related_wiki: ["philosophy/core-principles","philosophy/origin-narrative","architecture/plugin-design-spec","architecture/implementation-plan","architecture/philosophy-implementation-gap-analysis","roadmap/philosophy-alignment-roadmap"]
 phase: done
 blockers: []
 next_action: ""

@@ -4,7 +4,7 @@ title: "v1.1.0 Release"
 category: "release"
 created: "2026-05-31"
 updated: "2026-05-31"
-related_initiatives: ["prepare-v1-1-0-release"]
+related_initiatives: ["prepare-v1-1-0-release","prepare-v1-2-0-release"]
 tags: ["release","v1.1.0","verification"]
 lifecycle: "stable"
 knowledge_type: "release-note"

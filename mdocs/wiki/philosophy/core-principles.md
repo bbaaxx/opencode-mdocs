@@ -3,9 +3,14 @@ id: core-principles
 title: Core Principles — The Philosophy Behind opencode-mdocs
 category: philosophy
 created: 2026-05-28
-updated: 2026-05-28
-related_initiatives: []
+updated: 2026-06-01
+related_initiatives: [define-v2-memory-metadata, add-cross-link-graph-linter, upgrade-dispatch-memory-retrieval, add-resume-status-cockpit, align-implementation-with-philosophy]
 tags: [philosophy, memory, distributed-agents, human-ai-collaboration]
+lifecycle: stable
+knowledge_type: foundational-principles
+confidence: high
+source_initiatives: [align-implementation-with-philosophy, define-v2-memory-metadata, add-cross-link-graph-linter, upgrade-dispatch-memory-retrieval, add-resume-status-cockpit]
+supersedes: []
 ---
 
 # Core Principles

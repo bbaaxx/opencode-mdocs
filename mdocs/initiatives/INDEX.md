@@ -2,6 +2,7 @@
 
 - **Complete mdocs CLI Commands (delete, archive, index.sync)** (done) — complete-mdocs-cli-commands--2026-05-29.md — 2026-05-29 — [enhancement, cli, commands, initiatives, delete, archive]
 - **Prepare v1.1.0 Release** (done) — prepare-v1-1-0-release--2026-05-31.md — 2026-05-31 — [release, v1.1.0]
+- **Clean Up Graph Validation Warnings** (done) — clean-up-graph-warnings--2026-06-01.md — 2026-06-01 — []
 - **Fix Frontmatter Type Mismatch** (done) — fix-frontmatter-type-mismatch--2026-05-27.md — 2026-05-27 — [bug, initiative, frontmatter]
 - **Install and Configure opencode-mdocs** (done) — install-and-configure-opencode-mdocs--2026-05-27.md — 2026-05-27 — [setup, plugin]
 - **Remove Default Model from mdocs-orchestrator Agent** (done) — remove-default-model--2026-05-27.md — 2026-05-27 — [agent, config, model]
