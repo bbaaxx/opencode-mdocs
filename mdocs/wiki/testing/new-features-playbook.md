@@ -4,11 +4,7 @@ title: New Features Testing Playbook
 category: testing
 created: "2026-05-31"
 updated: "2026-05-31"
-related_initiatives: 
-  - add-wiki-stub-generation
-  - add-wiki-bidirectional-links
-  - add-index-sync-and-consistency
-  - prepare-v1-2-0-release
+related_initiatives: ["add-wiki-stub-generation", "add-wiki-bidirectional-links", "add-index-sync-and-consistency", "prepare-v1-2-0-release"]
 tags:
   - testing
   - validation
