@@ -55,3 +55,16 @@ When marking an initiative `done`:
 - **Search:** Use `mdocs_lookup` for exact initiative filename discovery, then `./mdocs/initiatives/INDEX.md` or `mdocs_search` for broader tag/content matches.
 - **Resume:** Use `mdocs_resume({ initiativeId: '<id>' })` to get next action, blockers, latest progress, and validation status
 - **Link wiki:** Add `related_wiki` entries to connect knowledge. Wiki entries should have reciprocal `related_initiatives`.
+- **Stub wiki:** When referencing a non-existent wiki entry, use `mdocs { command: 'wiki.stub', args: { category: '...', id: '...', title: '...' } }` to auto-scaffold a stub. This prevents broken links and gives the wiki entry a default template with Overview, Details, and References sections.
+
+## Wiki Stub Generation
+
+When an initiative references a wiki entry that doesn't exist yet:
+
+1. Use the `wiki.stub` command to scaffold it automatically:
+   ```
+   mdocs { command: 'wiki.stub', args: { category: 'architecture', id: 'new-pattern', title: 'New Pattern' } }
+   ```
+2. The stub includes frontmatter (`id`, `title`, `category`, `created`, `updated`, `related_initiatives`, `tags`) and placeholder sections.
+3. Validation (`mdocs_validate`) will report broken `related_wiki` links as errors, helping catch missing stubs early.
+4. If a stub already exists, the command returns `{ existing: true }` without overwriting.

@@ -37,6 +37,8 @@ export function createPlugin(baseDir: string) {
       'initiative.delete',
       'initiative.archive',
       'wiki.create',
+      'wiki.update',
+      'wiki.stub',
       'wiki.delete',
       'wiki.list',
       'validate',
@@ -310,6 +312,28 @@ export function createPlugin(baseDir: string) {
                 supersedes: Array.isArray(args.supersedes) ? args.supersedes : undefined,
               });
               return { success: true, filename: path.join(path.basename(path.dirname(filePath)), path.basename(filePath)), id: args.id };
+            }
+
+            if (command === 'wiki.update') {
+              if (!args.category || !args.id) return { error: 'wiki.update requires category and id' };
+              const existing = wiki.read(args.category, args.id);
+              if (!existing) return { error: `Wiki entry not found: ${args.category}/${args.id}` };
+              if (args.title !== undefined) existing.title = args.title;
+              if (args.content !== undefined) existing.content = args.content;
+              if (Array.isArray(args.tags)) existing.tags = args.tags;
+              if (Array.isArray(args.relatedInitiatives)) existing.relatedInitiatives = args.relatedInitiatives;
+              existing.updated = date;
+              const filePath = wiki.update(args.category, args.id, existing);
+              return { success: true, filename: path.join(path.basename(path.dirname(filePath)), path.basename(filePath)), id: args.id };
+            }
+
+            if (command === 'wiki.stub') {
+              if (!args.category || !args.id) return { error: 'wiki.stub requires category and id' };
+              const result = wiki.stub(args.category, args.id, args.title, args.template);
+              if (result.existing) {
+                return { success: false, existing: true, filePath: path.relative(mdocsRoot, result.filePath) };
+              }
+              return { success: true, category: args.category, id: args.id, filePath: path.relative(mdocsRoot, result.filePath) };
             }
 
             if (command === 'initiative.delete') {

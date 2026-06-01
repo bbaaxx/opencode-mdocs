@@ -193,12 +193,81 @@ export class WikiManager {
     return results;
   }
 
+  stub(category: string, id: string, title?: string, template?: string): { success: boolean; existing?: boolean; filePath: string } {
+    const cat = this.sanitizeName(category);
+    const entryId = this.sanitizeName(id);
+    const categoryDir = path.join(this.dir, cat);
+    fs.mkdirSync(categoryDir, { recursive: true });
+    const filePath = path.join(categoryDir, `${entryId}.md`);
+
+    if (fs.existsSync(filePath)) {
+      return { success: false, existing: true, filePath };
+    }
+
+    const date = new Date().toISOString().split('T')[0];
+    const stubTitle = title || entryId;
+    const stubContent = template || this.defaultStubTemplate(stubTitle, cat, entryId, date);
+
+    fs.writeFileSync(filePath, stubContent, 'utf8');
+    this.updateIndices();
+    return { success: true, filePath };
+  }
+
+  private defaultStubTemplate(title: string, category: string, id: string, date: string): string {
+    return `---
+id: "${id}"
+title: "${title}"
+category: "${category}"
+created: "${date}"
+updated: "${date}"
+related_initiatives: []
+tags: []
+---
+
+## Overview
+
+<!-- Add overview here -->
+
+## Details
+
+<!-- Add details here -->
+
+## References
+
+- Linked from initiative: <!-- initiative ids will be auto-populated -->
+`;
+  }
+
   validate(): { valid: boolean; errors: string[]; warnings: string[] } {
     const errors: string[] = [];
     const warnings: string[] = [];
     const referencedWiki = this.referencedWikiRefs();
     const categories = fs.readdirSync(this.dir)
       .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
+
+    // Check for broken related_wiki links in initiatives
+    const initiativesDir = path.join(path.dirname(this.dir), 'initiatives');
+    if (fs.existsSync(initiativesDir)) {
+      const initiativeFiles = fs.readdirSync(initiativesDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+      for (const fileName of initiativeFiles) {
+        try {
+          const content = fs.readFileSync(path.join(initiativesDir, fileName), 'utf8');
+          for (const ref of this.parseRelatedWiki(content)) {
+            const [cat, entryId] = ref.split('/');
+            if (!cat || !entryId) {
+              errors.push(`Initiative ${fileName} has invalid related_wiki format: ${ref}`);
+              continue;
+            }
+            const wikiFilePath = path.join(this.dir, cat, `${entryId}.md`);
+            if (!fs.existsSync(wikiFilePath)) {
+              errors.push(`Initiative ${fileName} references missing wiki entry: ${ref}`);
+            }
+          }
+        } catch {
+          // Ignore unreadable initiative files
+        }
+      }
+    }
 
     for (const category of categories) {
       const catDir = path.join(this.dir, category);

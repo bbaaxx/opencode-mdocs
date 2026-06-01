@@ -332,4 +332,112 @@ related_wiki: ["architecture/referenced"]
     expect(readBack?.confidence).toBe('high');
     expect(readBack?.sourceInitiatives).toEqual(['align-implementation-with-philosophy']);
   });
+
+  test('stub creates a new wiki entry with default template', () => {
+    const manager = new WikiManager(testDir);
+    const result = manager.stub('architecture', 'new-stub', 'New Stub');
+
+    expect(result.success).toBe(true);
+    expect(fs.existsSync(result.filePath)).toBe(true);
+
+    const content = fs.readFileSync(result.filePath, 'utf8');
+    expect(content).toContain('id: "new-stub"');
+    expect(content).toContain('title: "New Stub"');
+    expect(content).toContain('category: "architecture"');
+    expect(content).toContain('## Overview');
+    expect(content).toContain('## Details');
+    expect(content).toContain('## References');
+  });
+
+  test('stub returns existing when entry already exists', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'existing-stub',
+      title: 'Existing Stub',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'Already here'
+    });
+
+    const result = manager.stub('architecture', 'existing-stub', 'Different Title');
+
+    expect(result.success).toBe(false);
+    expect(result.existing).toBe(true);
+  });
+
+  test('stub updates indices after creation', () => {
+    const manager = new WikiManager(testDir);
+    manager.stub('guides', 'guide-stub', 'Guide Stub');
+
+    const catIndex = fs.readFileSync(path.join(testDir, 'wiki', 'guides', 'INDEX.md'), 'utf8');
+    expect(catIndex).toContain('Guide Stub');
+
+    const rootIndex = fs.readFileSync(path.join(testDir, 'wiki', 'INDEX.md'), 'utf8');
+    expect(rootIndex).toContain('guides');
+  });
+
+  test('stub accepts custom template', () => {
+    const manager = new WikiManager(testDir);
+    const customTemplate = '---\nid: "custom-id"\ntitle: "Custom Title"\ncategory: "testing"\ncreated: "2026-05-29"\nupdated: "2026-05-29"\nrelated_initiatives: []\ntags: []\n---\n\nCustom body\n';
+    const result = manager.stub('testing', 'custom-stub', 'Custom Title', customTemplate);
+
+    expect(result.success).toBe(true);
+    const content = fs.readFileSync(result.filePath, 'utf8');
+    expect(content).toBe(customTemplate);
+  });
+
+  test('validate reports broken related_wiki links as errors', () => {
+    const manager = new WikiManager(testDir);
+    const initiativesDir = path.join(testDir, 'initiatives');
+    fs.mkdirSync(initiativesDir, { recursive: true });
+    fs.writeFileSync(path.join(initiativesDir, 'broken-link.md'), `---
+id: "broken-link"
+title: "Broken Link"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["architecture/missing-entry"]
+---
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('references missing wiki entry: architecture/missing-entry')
+    ]));
+  });
+
+  test('validate does not error for valid related_wiki links', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'valid-entry',
+      title: 'Valid Entry',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'Content'
+    });
+
+    const initiativesDir = path.join(testDir, 'initiatives');
+    fs.mkdirSync(initiativesDir, { recursive: true });
+    fs.writeFileSync(path.join(initiativesDir, 'valid-link.md'), `---
+id: "valid-link"
+title: "Valid Link"
+status: "active"
+created: "2026-05-29"
+related_wiki: ["architecture/valid-entry"]
+---
+`, 'utf8');
+
+    const result = manager.validate();
+
+    expect(result.errors).not.toEqual(expect.arrayContaining([
+      expect.stringContaining('architecture/valid-entry')
+    ]));
+  });
 });

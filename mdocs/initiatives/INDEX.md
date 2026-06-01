@@ -23,7 +23,7 @@
 - **Fix mdocs First Activation Hook Error** (done) — fix-mdocs-first-activation-hook-error--2026-05-31.md — 2026-05-31 — [bug, plugin, hooks, tools, orchestrator, activation]
 - **Add Checkable Plan Items to Initiatives** (done) — add-checkable-plan-items--2026-05-27.md — 2026-05-27 — [enhancement, workflow, initiatives]
 - **Add Initiative Priorities and Dependencies** (done) — add-initiative-priorities-and-dependencies--2026-05-27.md — 2026-05-27 — [enhancement, initiatives, scheduling]
-- **Add Wiki Stub Generation and Auto-Create from Initiative Links** (active) — add-wiki-stub-generation--2026-05-29.md — 2026-05-29 — [enhancement, wiki, stub, auto-create, templates]
+- **Add Wiki Stub Generation and Auto-Create from Initiative Links** (done) — add-wiki-stub-generation--2026-05-29.md — 2026-05-29 — [enhancement, wiki, stub, auto-create, templates]
 - **Add Wiki Manager CRUD Operations** (done) — add-wiki-manager-crud--2026-05-27.md — 2026-05-27 — [enhancement, wiki, api]
 - **Fix mdocs_status Tool Error** (done) — fix-mdocs-status-error--2026-05-27.md — 2026-05-27 — [bug, plugin, tools]
 - **Fix mdocs Permission Requests by Updating Agent Config** (done) — fix-mdocs-permissions--2026-05-27.md — 2026-05-27 — [bug, permissions, agent, config]
