@@ -1,0 +1,392 @@
+---
+id: new-features-playbook
+title: New Features Testing Playbook
+category: testing
+created: "2026-05-31"
+updated: "2026-05-31"
+related_initiatives: 
+  - add-wiki-stub-generation
+  - add-wiki-bidirectional-links
+  - add-index-sync-and-consistency
+  - prepare-v1-2-0-release
+tags:
+  - testing
+  - validation
+  - qa
+  - manual-testing
+---
+
+## Overview
+
+This playbook provides step-by-step manual test procedures for the three features implemented on 2026-05-31:
+
+1. **Wiki Stub Generation** (Initiative #4)
+2. **Bidirectional Wiki-Initiative Links** (Initiative #2)
+3. **INDEX Auto-Sync and Consistency** (Initiative #3)
+
+Each section includes:
+- **Prerequisites:** What must be set up before testing
+- **Test Steps:** Exact commands or actions to execute
+- **Expected Results:** What you should observe
+- **Verification:** How to confirm the feature works correctly
+
+Run these tests in a fresh test directory to avoid polluting production data.
+
+---
+
+## Feature 1: Wiki Stub Generation
+
+**Initiative:** `add-wiki-stub-generation`  
+**What it does:** Automatically creates wiki entry stubs with default templates when an initiative references a non-existent wiki entry, or on explicit request via the `wiki.stub` command.
+
+### Prerequisites
+- opencode-mdocs plugin is active
+- A test project directory is available
+
+### Test 1.1: Create Wiki Stub via Command
+
+**Steps:**
+1. Initialize mdocs in a test directory:
+   ```
+   mdocs_init.execute({})
+   ```
+2. Create a wiki stub:
+   ```
+   mdocs { command: 'wiki.stub', args: { category: 'testing', id: 'stub-demo', title: 'Stub Demo' } }
+   ```
+
+**Expected Result:**
+- Returns: `{ success: true, category: 'testing', id: 'stub-demo', filePath: 'wiki/testing/stub-demo.md' }`
+- File `wiki/testing/stub-demo.md` exists with:
+  - Frontmatter: `id`, `title`, `category`, `created`, `updated`, `related_initiatives: []`, `tags: []`
+  - Body sections: `## Overview`, `## Details`, `## References`
+  - A comment indicating where to add content
+
+**Verification:**
+```bash
+# Check file exists and has correct structure
+cat wiki/testing/stub-demo.md | grep "## Overview"
+cat wiki/testing/stub-demo.md | grep "## Details"
+cat wiki/testing/stub-demo.md | grep "## References"
+```
+
+### Test 1.2: Stub Does Not Overwrite Existing Entry
+
+**Steps:**
+1. Create a wiki entry:
+   ```
+   mdocs { command: 'wiki.create', args: { category: 'testing', id: 'existing', title: 'Existing', content: 'Original content' } }
+   ```
+2. Attempt to stub the same entry:
+   ```
+   mdocs { command: 'wiki.stub', args: { category: 'testing', id: 'existing', title: 'Different' } }
+   ```
+
+**Expected Result:**
+- Returns: `{ success: false, existing: true, filePath: 'wiki/testing/existing.md' }`
+- Original file content is preserved
+
+### Test 1.3: Custom Template Support
+
+**Steps:**
+1. Create a stub with a custom template:
+   ```
+   mdocs { command: 'wiki.stub', args: { category: 'testing', id: 'custom', title: 'Custom', template: '---\nid: "custom"\ntitle: "Custom"\ncategory: "testing"\ncreated: "2026-05-31"\nupdated: "2026-05-31"\nrelated_initiatives: []\ntags: []\n---\n\nCustom body here\n' } }
+   ```
+
+**Expected Result:**
+- File contains exactly the custom template content, not the default stub
+
+### Test 1.4: Validation Detects Broken related_wiki Links
+
+**Steps:**
+1. Create an initiative with a broken wiki reference:
+   ```
+   mdocs { command: 'initiative.create', args: { title: 'Broken Link Test', relatedWiki: ['testing/nonexistent'] } }
+   ```
+2. Run validation:
+   ```
+   mdocs_validate.execute({})
+   ```
+
+**Expected Result:**
+- Validation result includes an error: `Initiative <filename> references missing wiki entry: testing/nonexistent`
+- `valid` field is `false` for the wiki section
+
+---
+
+## Feature 2: Bidirectional Wiki-Initiative Links
+
+**Initiative:** `add-wiki-bidirectional-links`  
+**What it does:** Automatically maintains bidirectional links between initiatives and wiki entries, and auto-generates a `## Referenced By` section in wiki entries.
+
+### Test 2.1: Create Bidirectional Link via wiki.link
+
+**Steps:**
+1. Create an initiative:
+   ```
+   mdocs { command: 'initiative.create', args: { title: 'Link Test', objective: 'Test bidirectional linking' } }
+   ```
+2. Create a wiki entry:
+   ```
+   mdocs { command: 'wiki.create', args: { category: 'testing', id: 'link-target', title: 'Link Target', content: 'Target content' } }
+   ```
+3. Establish bidirectional link:
+   ```
+   mdocs { command: 'wiki.link', args: { initiativeId: '<initiative-id>', wikiSlug: 'testing/link-target' } }
+   ```
+
+**Expected Result:**
+- Returns: `{ success: true, bidirectional: true, initiativeId: '...', wikiSlug: 'testing/link-target' }`
+- Initiative frontmatter now includes `related_wiki: ["testing/link-target"]`
+- Wiki frontmatter now includes `related_initiatives: ["<initiative-id>"]`
+- Wiki file contains auto-generated section:
+  ```markdown
+  ## Referenced By
+
+  *Auto-generated by mdocs*
+
+  - <initiative-id>
+  ```
+
+**Verification:**
+```bash
+grep "related_wiki" mdocs/initiatives/<initiative-file>.md
+grep "related_initiatives" mdocs/wiki/testing/link-target.md
+grep "## Referenced By" mdocs/wiki/testing/link-target.md
+```
+
+### Test 2.2: Referenced By Section Updates on wiki.update
+
+**Steps:**
+1. Read the wiki entry from Test 2.1
+2. Modify it via `wiki.update`:
+   ```
+   mdocs { command: 'wiki.update', args: { category: 'testing', id: 'link-target', content: 'Updated content' } }
+   ```
+
+**Expected Result:**
+- The `## Referenced By` section is regenerated (not duplicated)
+- Only ONE `## Referenced By` section exists in the file
+- The initiative ID is still listed
+
+**Verification:**
+```bash
+# Count occurrences of "Referenced By" - should be exactly 1
+grep -c "## Referenced By" mdocs/wiki/testing/link-target.md
+```
+
+### Test 2.3: wiki.read Returns Clean Content (No Referenced By)
+
+**Steps:**
+1. Read the wiki entry:
+   ```
+   # Via code or tool that uses wiki.read()
+   ```
+
+**Expected Result:**
+- The `content` field does NOT contain the `## Referenced By` section
+- Only user-written content is returned
+
+### Test 2.4: Wiki-to-Wiki Cross-Reference via wiki.xref
+
+**Steps:**
+1. Create two wiki entries:
+   ```
+   mdocs { command: 'wiki.create', args: { category: 'testing', id: 'source', title: 'Source', content: 'Source content' } }
+   mdocs { command: 'wiki.create', args: { category: 'testing', id: 'target', title: 'Target', content: 'Target content' } }
+   ```
+2. Create cross-reference:
+   ```
+   mdocs { command: 'wiki.xref', args: { fromSlug: 'testing/source', toSlug: 'testing/target' } }
+   ```
+
+**Expected Result:**
+- Returns: `{ success: true, bidirectional: true, fromSlug: 'testing/source', toSlug: 'testing/target' }`
+- Source wiki frontmatter includes `related_wiki: ["testing/target"]`
+
+---
+
+## Feature 3: INDEX Auto-Sync and Consistency
+
+**Initiative:** `add-index-sync-and-consistency`  
+**What it does:** Detects when INDEX.md files are out of sync with the filesystem and provides tools to check and repair inconsistencies.
+
+### Test 3.1: Check Consistency on Clean Repo
+
+**Steps:**
+1. Ensure mdocs is initialized and has at least one initiative and one wiki entry
+2. Run index check:
+   ```
+   mdocs_index_check { mode: 'check' }
+   ```
+
+**Expected Result:**
+```json
+{
+  "consistent": true,
+  "initiatives": { "consistent": true, "missing": [], "orphans": [], "stale": false },
+  "wiki": { "consistent": true, "missing": [], "orphans": [], "stale": false },
+  "repaired": false
+}
+```
+
+### Test 3.2: Detect Orphan Files
+
+**Steps:**
+1. Manually create a file that bypasses the API:
+   ```bash
+   echo "---
+   id: orphan
+   title: Orphan
+   status: active
+   created: 2026-05-31
+   updated: 2026-05-31
+   ---
+   
+   ## Objective
+   
+   ## Plan
+   
+   ## Progress Log
+   
+   ## Artifacts" > mdocs/initiatives/orphan--2026-05-31.md
+   ```
+2. Run index check:
+   ```
+   mdocs_index_check { mode: 'check' }
+   ```
+
+**Expected Result:**
+- `consistent` is `false`
+- `initiatives.orphans` contains `orphan--2026-05-31.md`
+
+### Test 3.3: Detect Missing Files Listed in INDEX
+
+**Steps:**
+1. Edit `mdocs/initiatives/INDEX.md` to add a ghost entry:
+   ```markdown
+   # Initiatives
+
+   - **Ghost** (active) — ghost--2026-05-31.md — 2026-05-31 — []
+   ```
+2. Run index check:
+   ```
+   mdocs_index_check { mode: 'check' }
+   ```
+
+**Expected Result:**
+- `consistent` is `false`
+- `initiatives.missing` contains `ghost--2026-05-31.md`
+
+### Test 3.4: Detect Stale INDEX
+
+**Steps:**
+1. Note that the repo is currently consistent
+2. Directly modify an existing initiative file (e.g., append a comment):
+   ```bash
+   echo "\n<!-- modified -->" >> mdocs/initiatives/<existing-file>.md
+   ```
+3. Run index check:
+   ```
+   mdocs_index_check { mode: 'check' }
+   ```
+
+**Expected Result:**
+- `consistent` is `false`
+- `initiatives.stale` is `true`
+
+### Test 3.5: Repair Mode Fixes Inconsistencies
+
+**Steps:**
+1. Follow Tests 3.2 and 3.3 to create inconsistencies
+2. Run repair:
+   ```
+   mdocs_index_check { mode: 'repair' }
+   ```
+
+**Expected Result:**
+```json
+{
+  "consistent": true,
+  "initiatives": { "consistent": true, "missing": [], "orphans": [], "stale": false },
+  "wiki": { "consistent": true, "missing": [], "orphans": [], "stale": false },
+  "repaired": true
+}
+```
+- INDEX.md files are regenerated and now reflect the actual filesystem state
+
+### Test 3.6: Timestamp Tracking
+
+**Steps:**
+1. After running any operation that updates indices (create, update, delete, stub, link, repair), check:
+   ```bash
+   cat mdocs/.index-meta.json
+   ```
+
+**Expected Result:**
+```json
+{ "lastSync": "2026-05-31T..." }
+```
+- Timestamp updates after each index regeneration
+
+---
+
+## Regression Tests
+
+After running all feature tests, verify no regressions:
+
+### Test R.1: Full Validation Passes
+```
+mdocs_validate.execute({})
+```
+**Expected:** `valid: true` for initiatives, wiki, and graph
+
+### Test R.2: Full Test Suite Passes
+```bash
+npm test
+```
+**Expected:** All tests pass (currently 167 tests)
+
+### Test R.3: Search Still Works
+```
+mdocs_search { query: 'stub bidirectional consistency' }
+```
+**Expected:** Returns relevant results without errors
+
+### Test R.4: Status Cockpit Still Works
+```
+mdocs_status.execute({})
+```
+**Expected:** Returns workflow state, active initiatives, and validation summary
+
+---
+
+## Test Environment Cleanup
+
+After completing manual tests:
+
+1. Remove test initiatives and wiki entries (or use a dedicated test directory)
+2. Run `mdocs_index_check { mode: 'repair' }` if anything was modified
+3. Run `mdocs_validate` to confirm the repo is clean
+4. Run `npm test` to confirm all automated tests still pass
+
+---
+
+## Appendix: Quick Command Reference
+
+| Feature | Command | Key Args |
+|---------|---------|----------|
+| Stub | `wiki.stub` | `category`, `id`, `title?`, `template?` |
+| Link | `wiki.link` | `initiativeId`, `wikiSlug` |
+| Cross-ref | `wiki.xref` | `fromSlug`, `toSlug` |
+| Update | `wiki.update` | `category`, `id`, `content?`, `tags?`, `relatedInitiatives?` |
+| Index Check | `mdocs_index_check` | `mode: 'check'` or `'repair'` |
+| Validate | `mdocs_validate` | `{}` |
+| Search | `mdocs_search` | `query` |
+| Status | `mdocs_status` | `{}` |
+
+---
+
+*Last updated: 2026-05-31*  
+*For issues or updates, see initiatives: add-wiki-stub-generation, add-wiki-bidirectional-links, add-index-sync-and-consistency*

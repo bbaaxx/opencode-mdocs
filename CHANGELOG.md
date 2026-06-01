@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-01
+
+### Added
+
+- **Wiki Stub Generation** — Added `WikiManager.stub()` with default and custom template support; `wiki.stub` and `wiki.update` commands for the mdocs tool; validation now reports broken `related_wiki` links as errors instead of warnings.
+- **Bidirectional Wiki-Initiative Links** — Auto-generated `## Referenced By` sections in wiki entries listing all linking initiatives; `wiki.link` command for atomic bidirectional linking; `wiki.xref` command for wiki-to-wiki cross-references; `addRelatedInitiative()`, `getReferencedBy()`, and `addWikiCrossRef()` APIs.
+- **INDEX Auto-Sync and Consistency** — `checkConsistency()` in both InitiativeManager and WikiManager detects missing files, orphan files, and stale indices; `mdocs_index_check` custom tool with `check` and `repair` modes; `.index-meta.json` timestamp tracking on every index regeneration.
+- **Test Coverage** — Added 16 new tests for stub generation, bidirectional links, cross-references, and INDEX consistency (167 total tests).
+
+### Changed
+
+- Updated `mdocs-initiative` and `mdocs-workflow` skills with documentation for new features.
+
 ## [1.1.0] - 2026-05-31
 
 ### Added
