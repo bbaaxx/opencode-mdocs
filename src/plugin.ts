@@ -41,6 +41,8 @@ export function createPlugin(baseDir: string) {
       'wiki.stub',
       'wiki.delete',
       'wiki.list',
+      'wiki.link',
+      'wiki.xref',
       'validate',
       'index.sync'
     ];
@@ -334,6 +336,40 @@ export function createPlugin(baseDir: string) {
                 return { success: false, existing: true, filePath: path.relative(mdocsRoot, result.filePath) };
               }
               return { success: true, category: args.category, id: args.id, filePath: path.relative(mdocsRoot, result.filePath) };
+            }
+
+            if (command === 'wiki.link') {
+              if (!args.initiativeId || !args.wikiSlug) return { error: 'wiki.link requires initiativeId and wikiSlug' };
+              const [cat, entryId] = args.wikiSlug.split('/');
+              if (!cat || !entryId) return { error: `Invalid wikiSlug format: ${args.wikiSlug}. Expected category/id` };
+
+              // Update initiative: add wikiSlug to relatedWiki
+              const initFileName = findInitiativeFilename(args.initiativeId);
+              if (!initFileName) return { error: `Initiative not found: ${args.initiativeId}` };
+              const initiative = initiatives.read(initFileName);
+              if (!initiative) return { error: `Initiative not found: ${args.initiativeId}` };
+              if (!initiative.relatedWiki.includes(args.wikiSlug)) {
+                initiative.relatedWiki.push(args.wikiSlug);
+                initiative.updated = date;
+                initiatives.update(initFileName, initiative);
+              }
+
+              // Update wiki: add initiativeId to relatedInitiatives
+              wiki.addRelatedInitiative(cat, entryId, args.initiativeId);
+
+              return { success: true, bidirectional: true, initiativeId: args.initiativeId, wikiSlug: args.wikiSlug };
+            }
+
+            if (command === 'wiki.xref') {
+              if (!args.fromSlug || !args.toSlug) return { error: 'wiki.xref requires fromSlug and toSlug' };
+              const [fromCat, fromId] = args.fromSlug.split('/');
+              const [toCat, toId] = args.toSlug.split('/');
+              if (!fromCat || !fromId) return { error: `Invalid fromSlug format: ${args.fromSlug}. Expected category/id` };
+              if (!toCat || !toId) return { error: `Invalid toSlug format: ${args.toSlug}. Expected category/id` };
+
+              wiki.addWikiCrossRef(fromCat, fromId, toCat, toId);
+
+              return { success: true, bidirectional: true, fromSlug: args.fromSlug, toSlug: args.toSlug };
             }
 
             if (command === 'initiative.delete') {

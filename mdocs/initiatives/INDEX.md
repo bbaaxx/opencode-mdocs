@@ -16,7 +16,7 @@
 - **Add Audit Log and Event History** (done) — add-audit-log-and-event-history--2026-05-27.md — 2026-05-27 — [enhancement, observability, history]
 - **Upgrade Dispatch into Memory Retrieval Assembly** (done) — upgrade-dispatch-memory-retrieval--2026-05-28.md — 2026-05-28 — [phase-1, dispatch, memory, retrieval, subagent]
 - **Add Resume and Status Cockpit** (done) — add-resume-status-cockpit--2026-05-28.md — 2026-05-28 — [phase-1, resume, status, ux, workflow]
-- **Add Bidirectional Wiki-Initiative Links and Back-Link Generation** (active) — add-wiki-bidirectional-links--2026-05-29.md — 2026-05-29 — [enhancement, wiki, links, back-reference, cross-reference]
+- **Add Bidirectional Wiki-Initiative Links and Back-Link Generation** (done) — add-wiki-bidirectional-links--2026-05-29.md — 2026-05-29 — [enhancement, wiki, links, back-reference, cross-reference]
 - **Add INDEX Auto-Sync and Consistency Utilities** (active) — add-index-sync-and-consistency--2026-05-29.md — 2026-05-29 — [enhancement, index, sync, consistency, automation]
 - **Consolidate docs/superpowers into mdocs Knowledge Management** (done) — consolidate-docs-superpowers--2026-05-29.md — 2026-05-29 — [enhancement, documentation, knowledge-management, cleanup]
 - **Add mdocs CLI Commands for Initiative and Wiki Operations** (done) — add-mdocs-cli-commands--2026-05-29.md — 2026-05-29 — [enhancement, cli, commands, initiatives, wiki, automation]

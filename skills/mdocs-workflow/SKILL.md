@@ -45,4 +45,22 @@ Use the `mdocs` command tool for safe filesystem-changing maintenance:
 - `initiative.archive` moves a done initiative to `initiatives/archive/` and regenerates active/archive indices.
 - `wiki.delete` removes a wiki entry and regenerates wiki indices.
 - `wiki.list` lists wiki entries, optionally filtered by category.
+- `wiki.link` creates a bidirectional link between an initiative and a wiki entry (updates both `related_wiki` and `related_initiatives`).
+- `wiki.xref` creates a cross-reference link between two wiki entries (updates `related_wiki` frontmatter).
 - `index.sync` force-regenerates initiative and wiki indices after direct file edits.
+
+## Bidirectional Linking
+
+When connecting initiatives to wiki knowledge:
+
+1. **Initiative → Wiki:** Add `related_wiki: ["category/id"]` to the initiative frontmatter.
+2. **Wiki → Initiative:** The wiki entry automatically gets a `## Referenced By` section listing all linking initiatives. Use `wiki.link` to ensure both sides are updated atomically:
+   ```
+   mdocs { command: 'wiki.link', args: { initiativeId: 'my-initiative', wikiSlug: 'architecture/pattern' } }
+   ```
+3. **Wiki → Wiki:** Reference other wiki entries with `[[category/id]]` or `[text](category/id)` in the body. Use `wiki.xref` to establish bidirectional wiki cross-references:
+   ```
+   mdocs { command: 'wiki.xref', args: { fromSlug: 'architecture/pattern', toSlug: 'guides/usage' } }
+   ```
+
+The `## Referenced By` section in wiki entries is auto-generated and updated on create/update. It is stripped when reading via `wiki.read()` so the `content` field contains only user-written content.

@@ -59,6 +59,7 @@ export interface WikiEntry {
   confidence?: 'low' | 'medium' | 'high';
   sourceInitiatives?: string[];
   supersedes?: string[];
+  relatedWiki?: string[];
 }
 
 export interface WorkflowState {
