@@ -30,7 +30,7 @@
 - **Align Implementation with Philosophy** (done) — align-implementation-with-philosophy--2026-05-28.md — 2026-05-28 — [roadmap, philosophy, architecture, ux, memory]
 - **Prepare v1 Release** (done) — prepare-v1-release--2026-05-27.md — 2026-05-27 — [release, v1, milestone, quality]
 - **Auto-Register Agent and Skills in Config Hook** (done) — auto-register-agent-and-skills--2026-05-27.md — 2026-05-27 — [enhancement, ux, config]
-- **Prepare v1.2.0 Release** (active) — prepare-v1-2-0-release--2026-06-01.md — 2026-06-01 — [release, v1.2.0]
+- **Prepare v1.2.0 Release** (done) — prepare-v1-2-0-release--2026-06-01.md — 2026-06-01 — [release, v1.2.0]
 - **Fix v1 opencode Plugin Compatibility** (done) — fix-v1-opencode-compatibility--2026-05-28.md — 2026-05-28 — [bug, compatibility, v1, plugin, config, agent, tools]
 - **Grant Agent Autonomy Over mdocs Knowledge** (done) — mdocs-autonomy--2026-05-27.md — 2026-05-27 — [enhancement, workflow, permissions]
 - **Add mdocs_dispatch Custom Tool for Subagent Context Assembly** (done) — add-mdocs-dispatch-tool--2026-05-27.md — 2026-05-27 — [enhancement, subagent, orchestration]
