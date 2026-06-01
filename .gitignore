@@ -7,6 +7,9 @@ node_modules/
 coverage/
 *.tsbuildinfo
 
+# Legacy OMC runtime
+.omc/
+
 # Runtime workflow state — regenerated on each session
 mdocs/.workflow-state.json
 
