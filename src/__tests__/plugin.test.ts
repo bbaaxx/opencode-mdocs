@@ -712,8 +712,12 @@ related_wiki: []
       'initiative.delete',
       'initiative.archive',
       'wiki.create',
+      'wiki.update',
+      'wiki.stub',
       'wiki.delete',
       'wiki.list',
+      'wiki.link',
+      'wiki.xref',
       'validate',
       'index.sync'
     ]));
@@ -1005,6 +1009,7 @@ describe('Config Hook', () => {
       'mdocs',
       'mdocs_audit',
       'mdocs_dispatch',
+      'mdocs_index_check',
       'mdocs_init',
       'mdocs_lookup',
       'mdocs_resume',
@@ -1096,6 +1101,66 @@ Durable memory retrieval should include snippets for fresh agents.
     const hooks = await pluginDefault({ client: {}, project: {}, directory: testDir });
 
     expect((hooks as any).tool.mdocs_status).toBeDefined();
+  });
+
+  test('mdocs_index_check returns consistent for clean repo', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'check-me',
+      title: 'Check Me',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: ['check'],
+      relatedWiki: [],
+      objective: 'Check index consistency.',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+    await (plugin as any).tool.mdocs.execute({ command: 'wiki.create', args: { category: 'developer', id: 'check-doc', title: 'Check Doc', content: 'Docs.' } });
+
+    const result = await (plugin as any).tool.mdocs_index_check.execute({ mode: 'check' });
+
+    expect(result.consistent).toBe(true);
+    expect(result.initiatives.consistent).toBe(true);
+    expect(result.wiki.consistent).toBe(true);
+    expect(result.repaired).toBe(false);
+  });
+
+  test('mdocs_index_check detects and repairs inconsistencies', async () => {
+    const plugin = createPlugin(testDir);
+    (plugin as any).tool.mdocs_init.execute();
+    const manager = new InitiativeManager(path.join(testDir, 'mdocs'));
+    manager.create({
+      id: 'repair-me',
+      title: 'Repair Me',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'agent',
+      tags: ['repair'],
+      relatedWiki: [],
+      objective: 'Repair index consistency.',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    // Corrupt the INDEX
+    fs.writeFileSync(path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md'), '# Initiatives\n\n- **Ghost** (active) — ghost--2026-05-29.md — 2026-05-29 — []', 'utf8');
+
+    const checkResult = await (plugin as any).tool.mdocs_index_check.execute({ mode: 'check' });
+    expect(checkResult.consistent).toBe(false);
+    expect(checkResult.initiatives.missing.length).toBeGreaterThan(0);
+
+    const repairResult = await (plugin as any).tool.mdocs_index_check.execute({ mode: 'repair' });
+    expect(repairResult.consistent).toBe(true);
+    expect(repairResult.repaired).toBe(true);
+    expect(fs.readFileSync(path.join(testDir, 'mdocs', 'initiatives', 'INDEX.md'), 'utf8')).toContain('Repair Me');
   });
 
   test('default export wraps custom tool results in opencode ToolResult shape', async () => {

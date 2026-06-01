@@ -610,4 +610,86 @@ related_wiki: ["architecture/referenced-by-test", "other/cat"]
     const entry = manager.read('architecture', 'link-source');
     expect(entry!.relatedWiki).toContain('guides/how-to');
   });
+
+  test('checkConsistency returns consistent for clean wiki', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'wiki-consistency',
+      title: 'Wiki Consistency',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'Content'
+    });
+
+    const result = manager.checkConsistency();
+
+    expect(result.consistent).toBe(true);
+    expect(result.missing).toEqual([]);
+    expect(result.orphans).toEqual([]);
+    expect(result.stale).toBe(false);
+  });
+
+  test('checkConsistency detects orphan wiki files not in INDEX', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'listed-entry',
+      title: 'Listed Entry',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'Content'
+    });
+
+    // Create a file not in the category INDEX
+    fs.writeFileSync(path.join(testDir, 'wiki', 'architecture', 'orphan-wiki.md'), `---
+id: "orphan-wiki"
+title: "Orphan Wiki"
+category: "architecture"
+created: "2026-05-29"
+updated: "2026-05-29"
+related_initiatives: []
+tags: []
+---
+
+Content
+`, 'utf8');
+
+    const result = manager.checkConsistency();
+
+    expect(result.consistent).toBe(false);
+    expect(result.orphans).toEqual(expect.arrayContaining([
+      expect.stringContaining('orphan-wiki.md')
+    ]));
+  });
+
+  test('checkConsistency detects stale wiki index', () => {
+    const manager = new WikiManager(testDir);
+    manager.create({
+      id: 'stale-wiki',
+      title: 'Stale Wiki',
+      category: 'architecture',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      relatedInitiatives: [],
+      tags: [],
+      content: 'Content'
+    });
+
+    // Ensure consistent first
+    expect(manager.checkConsistency().consistent).toBe(true);
+
+    // Modify the file directly
+    const filePath = path.join(testDir, 'wiki', 'architecture', 'stale-wiki.md');
+    const content = fs.readFileSync(filePath, 'utf8');
+    fs.writeFileSync(filePath, content + '\n<!-- modified -->', 'utf8');
+
+    const result = manager.checkConsistency();
+    expect(result.stale).toBe(true);
+    expect(result.consistent).toBe(false);
+  });
 });

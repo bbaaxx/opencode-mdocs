@@ -393,6 +393,94 @@ tags: []
     return { valid: errors.length === 0, errors, warnings };
   }
 
+  checkConsistency(): { consistent: boolean; missing: string[]; orphans: string[]; stale: boolean } {
+    const missing: string[] = [];
+    const orphans: string[] = [];
+    let stale = false;
+
+    const categories = fs.readdirSync(this.dir)
+      .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
+
+    // Check root INDEX.md
+    const rootIndexPath = path.join(this.dir, 'INDEX.md');
+    if (!fs.existsSync(rootIndexPath)) {
+      missing.push('wiki/INDEX.md');
+    } else {
+      const rootIndexMtime = fs.statSync(rootIndexPath).mtimeMs;
+      const rootContent = fs.readFileSync(rootIndexPath, 'utf8');
+      // Extract category names from root index: [category](category/INDEX.md)
+      const listedCategories = new Set(Array.from(rootContent.matchAll(/\[([^\]]+)\]\([^)]*INDEX\.md\)/g)).map(m => m[1]));
+
+      for (const category of categories) {
+        if (!listedCategories.has(category)) {
+          orphans.push(`wiki/${category}/ (missing from root INDEX)`);
+        }
+      }
+    }
+
+    // Check per-category INDEX.md files
+    for (const category of categories) {
+      const catDir = path.join(this.dir, category);
+      const catIndexPath = path.join(catDir, 'INDEX.md');
+      const catFiles = fs.readdirSync(catDir).filter(f => f.endsWith('.md') && f !== 'INDEX.md');
+
+      if (!fs.existsSync(catIndexPath)) {
+        missing.push(`wiki/${category}/INDEX.md`);
+        continue;
+      }
+
+      const catIndexMtime = fs.statSync(catIndexPath).mtimeMs;
+      const catContent = fs.readFileSync(catIndexPath, 'utf8');
+      // Extract entry IDs from category index: - title or - id
+      const listedEntries = new Set(Array.from(catContent.matchAll(/^- (.+)$/gm)).map(m => {
+        const line = m[1].trim();
+        // Could be "- Title" or "- id" — we check against filenames
+        return line.toLowerCase().replace(/\s+/g, '-');
+      }));
+      const actualEntries = new Set(catFiles.map(f => f.replace('.md', '')));
+
+      for (const listed of listedEntries) {
+        if (!actualEntries.has(listed)) {
+          missing.push(`wiki/${category}/${listed}.md`);
+        }
+      }
+
+      for (const actual of catFiles) {
+        const actualId = actual.replace('.md', '');
+        // Check if actualId appears in the index (by title or by id)
+        const indexLines = Array.from(catContent.matchAll(/^- (.+)$/gm)).map(m => m[1].trim());
+        const foundInIndex = indexLines.some(line => {
+          const normalizedLine = line.toLowerCase().replace(/\s+/g, '-');
+          return normalizedLine === actualId.toLowerCase();
+        });
+        if (!foundInIndex) {
+          orphans.push(`wiki/${category}/${actual}`);
+        }
+      }
+
+      for (const fileName of catFiles) {
+        const filePath = path.join(catDir, fileName);
+        const fileMtime = fs.statSync(filePath).mtimeMs;
+        if (fileMtime > catIndexMtime) {
+          stale = true;
+        }
+      }
+    }
+
+    return {
+      consistent: missing.length === 0 && orphans.length === 0 && !stale,
+      missing,
+      orphans,
+      stale
+    };
+  }
+
+  private writeIndexMeta(): void {
+    const metaPath = path.join(path.dirname(this.dir), '.index-meta.json');
+    const meta = { lastSync: new Date().toISOString() };
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf8');
+  }
+
   private updateIndices(): void {
     const categories = fs.readdirSync(this.dir)
       .filter(f => fs.statSync(path.join(this.dir, f)).isDirectory());
@@ -421,5 +509,6 @@ tags: []
     const catLines = categories.map(c => `- [${c}](${c}/INDEX.md)`);
     const rootIndex = `# Wiki\n\n## Categories\n\n${catLines.join('\n')}`;
     fs.writeFileSync(path.join(this.dir, 'INDEX.md'), rootIndex, 'utf8');
+    this.writeIndexMeta();
   }
 }

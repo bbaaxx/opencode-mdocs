@@ -384,6 +384,52 @@ export class InitiativeManager {
     return { valid: errors.length === 0, errors, warnings };
   }
 
+  checkConsistency(): { consistent: boolean; missing: string[]; orphans: string[]; stale: boolean } {
+    const missing: string[] = [];
+    const orphans: string[] = [];
+    let stale = false;
+
+    const indexPath = path.join(this.dir, 'INDEX.md');
+    if (!fs.existsSync(indexPath)) {
+      return { consistent: false, missing: ['INDEX.md missing'], orphans: [], stale: true };
+    }
+
+    const indexContent = fs.readFileSync(indexPath, 'utf8');
+    const listed = new Set(Array.from(indexContent.matchAll(/[\w.-]+\.md/g)).map(match => match[0]).filter(name => name !== 'INDEX.md'));
+    const actualFiles = this.initiativeFiles();
+    const actual = new Set(actualFiles);
+
+    for (const listedFile of listed) {
+      if (!actual.has(listedFile)) {
+        missing.push(listedFile);
+      }
+    }
+
+    for (const actualFile of actualFiles) {
+      if (!listed.has(actualFile)) {
+        orphans.push(actualFile);
+      }
+    }
+
+    // Check staleness: compare INDEX mtime with latest initiative mtime
+    const indexMtime = fs.statSync(indexPath).mtimeMs;
+    for (const fileName of actualFiles) {
+      const filePath = path.join(this.dir, fileName);
+      const fileMtime = fs.statSync(filePath).mtimeMs;
+      if (fileMtime > indexMtime) {
+        stale = true;
+        break;
+      }
+    }
+
+    return {
+      consistent: missing.length === 0 && orphans.length === 0 && !stale,
+      missing,
+      orphans,
+      stale
+    };
+  }
+
   private listAll(): Initiative[] {
     const files = this.initiativeFiles();
     const initiatives: Initiative[] = [];
@@ -415,6 +461,12 @@ export class InitiativeManager {
     fs.writeFileSync(path.join(archiveDir, 'INDEX.md'), `# Archived Initiatives\n\n${lines.join('\n') || 'No archived initiatives yet.'}`, 'utf8');
   }
 
+  private writeIndexMeta(): void {
+    const metaPath = path.join(path.dirname(this.dir), '.index-meta.json');
+    const meta = { lastSync: new Date().toISOString() };
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf8');
+  }
+
   private updateIndex(): void {
     const files = this.initiativeFiles();
     const entries: { initiative: Initiative; fileName: string }[] = [];
@@ -429,5 +481,6 @@ export class InitiativeManager {
     const lines = entries.map(({ initiative: i, fileName }) => `- **${i.title}** (${i.status}) — ${fileName} — ${i.created} — [${i.tags.join(', ')}]`);
     const index = `# Initiatives\n\n${lines.join('\n') || 'No initiatives yet.'}`;
     fs.writeFileSync(path.join(this.dir, 'INDEX.md'), index, 'utf8');
+    this.writeIndexMeta();
   }
 }

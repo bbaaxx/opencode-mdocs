@@ -64,3 +64,18 @@ When connecting initiatives to wiki knowledge:
    ```
 
 The `## Referenced By` section in wiki entries is auto-generated and updated on create/update. It is stripped when reading via `wiki.read()` so the `content` field contains only user-written content.
+
+## INDEX Consistency
+
+When files are edited directly (bypassing mdocs commands), indices can become stale:
+
+1. **Check consistency:** Use `mdocs_index_check` to detect missing files, orphans, or staleness:
+   ```
+   mdocs_index_check({ mode: 'check' })
+   ```
+2. **Repair indices:** If inconsistencies are found, use repair mode to regenerate all INDEX files:
+   ```
+   mdocs_index_check({ mode: 'repair' })
+   ```
+3. The tool tracks last-sync timestamp in `mdocs/.index-meta.json`.
+4. Always run `mdocs_validate` after direct file edits to catch broken references.

@@ -526,4 +526,118 @@ related_wiki: [123]
       expect.stringContaining('numeric-wiki--2026-05-29.md has non-string wiki reference: 123')
     ]));
   });
+
+  test('checkConsistency returns consistent for clean repo', () => {
+    const manager = new InitiativeManager(testDir);
+    manager.create({
+      id: 'consistency-test',
+      title: 'Consistency Test',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'a',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Test',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    const result = manager.checkConsistency();
+
+    expect(result.consistent).toBe(true);
+    expect(result.missing).toEqual([]);
+    expect(result.orphans).toEqual([]);
+    expect(result.stale).toBe(false);
+  });
+
+  test('checkConsistency detects orphan files not in INDEX', () => {
+    const manager = new InitiativeManager(testDir);
+    manager.create({
+      id: 'orphan-detect',
+      title: 'Orphan Detect',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'a',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Test',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    // Manually create a file not in INDEX
+    fs.writeFileSync(path.join(testDir, 'initiatives', 'hidden--2026-05-29.md'), `---
+id: "hidden"
+title: "Hidden"
+status: "active"
+created: "2026-05-29"
+updated: "2026-05-29"
+owner: "a"
+tags: []
+related_wiki: []
+---
+
+## Objective
+
+## Plan
+
+## Progress Log
+
+## Artifacts
+`, 'utf8');
+
+    const result = manager.checkConsistency();
+
+    expect(result.consistent).toBe(false);
+    expect(result.orphans).toEqual(expect.arrayContaining([
+      expect.stringContaining('hidden--2026-05-29.md')
+    ]));
+  });
+
+  test('checkConsistency detects missing files listed in INDEX', () => {
+    const manager = new InitiativeManager(testDir);
+    // Write an INDEX with a ghost entry
+    fs.writeFileSync(path.join(testDir, 'initiatives', 'INDEX.md'), '# Initiatives\n\n- **Ghost** (active) — ghost--2026-05-29.md — 2026-05-29 — []', 'utf8');
+
+    const result = manager.checkConsistency();
+
+    expect(result.consistent).toBe(false);
+    expect(result.missing).toEqual(expect.arrayContaining([
+      expect.stringContaining('ghost--2026-05-29.md')
+    ]));
+  });
+
+  test('checkConsistency detects stale index when file is newer', () => {
+    const manager = new InitiativeManager(testDir);
+    manager.create({
+      id: 'stale-test',
+      title: 'Stale Test',
+      status: 'active',
+      created: '2026-05-29',
+      updated: '2026-05-29',
+      owner: 'a',
+      tags: [],
+      relatedWiki: [],
+      objective: 'Test',
+      plan: [],
+      progressLog: [],
+      artifacts: []
+    });
+
+    // Ensure consistent first
+    expect(manager.checkConsistency().consistent).toBe(true);
+
+    // Wait a bit and modify the file directly
+    const filePath = path.join(testDir, 'initiatives', 'stale-test--2026-05-29.md');
+    const content = fs.readFileSync(filePath, 'utf8');
+    fs.writeFileSync(filePath, content + '\n<!-- modified -->', 'utf8');
+
+    const result = manager.checkConsistency();
+    expect(result.stale).toBe(true);
+    expect(result.consistent).toBe(false);
+  });
 });

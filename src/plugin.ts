@@ -663,6 +663,40 @@ export function createPlugin(baseDir: string) {
           return { events };
         }
       },
+      mdocs_index_check: {
+        description: "Check and repair INDEX consistency for initiatives and wiki",
+        args: {
+          mode: z.enum(['check', 'repair']).optional().describe("Mode: 'check' reports inconsistencies, 'repair' regenerates indices")
+        },
+        execute: async (args: { mode?: 'check' | 'repair' }) => {
+          try {
+            const mode = args?.mode || 'check';
+            const initiativeResult = initiatives.checkConsistency();
+            const wikiResult = wiki.checkConsistency();
+            const consistent = initiativeResult.consistent && wikiResult.consistent;
+
+            if (mode === 'repair' && !consistent) {
+              initiatives.syncIndex();
+              wiki.syncIndices();
+              return {
+                consistent: true,
+                initiatives: { consistent: true, missing: [], orphans: [], stale: false },
+                wiki: { consistent: true, missing: [], orphans: [], stale: false },
+                repaired: true
+              };
+            }
+
+            return {
+              consistent,
+              initiatives: initiativeResult,
+              wiki: wikiResult,
+              repaired: false
+            };
+          } catch (err: any) {
+            return { error: err.message || String(err) };
+          }
+        }
+      },
       mdocs_resume: {
         description: "Resume active or specified initiative with next action and validation",
         args: {

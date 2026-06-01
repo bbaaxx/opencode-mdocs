@@ -41,4 +41,28 @@ export class MdocsManager {
            fs.statSync(initiativesPath).isDirectory() &&
            fs.statSync(wikiPath).isDirectory();
   }
+
+  private getMetaPath(): string {
+    return path.join(this.baseDir, '.index-meta.json');
+  }
+
+  writeIndexMeta(): void {
+    const metaPath = this.getMetaPath();
+    const meta = { lastSync: new Date().toISOString() };
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf8');
+  }
+
+  readIndexMeta(): { lastSync: string | null } {
+    const metaPath = this.getMetaPath();
+    if (!fs.existsSync(metaPath)) {
+      return { lastSync: null };
+    }
+    try {
+      const content = fs.readFileSync(metaPath, 'utf8');
+      const meta = JSON.parse(content);
+      return { lastSync: meta.lastSync || null };
+    } catch {
+      return { lastSync: null };
+    }
+  }
 }
