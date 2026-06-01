@@ -192,6 +192,10 @@ tags: [plugin, architecture]
 The plugin follows a plugin-centric architecture...
 ```
 
+**Wiki stub generation** — When an initiative references a wiki entry that doesn't exist yet, the `wiki.stub` command auto-creates it with a default template (Overview, Details, References sections). This prevents broken links and gives agents a starting point for documentation.
+
+**Bidirectional links** — When you link an initiative to a wiki entry, the wiki automatically gets a `## Referenced By` section listing all linking initiatives. The `wiki.link` command updates both sides atomically, and `wiki.xref` creates cross-references between wiki entries.
+
 ### Indices
 
 All indices are auto-generated:
@@ -221,13 +225,14 @@ The agent will:
 
 The plugin provides custom tools:
 
-- **`mdocs`** — Run initiative/wiki maintenance commands such as `initiative.create`, `initiative.update`, `initiative.done`, `initiative.archive`, `initiative.delete`, `wiki.create`, `wiki.delete`, `wiki.list`, `validate`, and `index.sync`
+- **`mdocs`** — Run initiative/wiki maintenance commands such as `initiative.create`, `initiative.update`, `initiative.done`, `initiative.archive`, `initiative.delete`, `wiki.create`, `wiki.update`, `wiki.stub`, `wiki.delete`, `wiki.list`, `wiki.link`, `wiki.xref`, `validate`, and `index.sync`
 - **`mdocs_init`** — Manually initialize the `/mdocs` structure
 - **`mdocs_status`** — Show current workflow state, active initiatives, resume info (current plan item, stale warnings), and last activity
 - **`mdocs_search`** — Search across initiatives and wiki by keyword (returns snippets and matched fields)
 - **`mdocs_dispatch`** — Assemble subagent context from an initiative, its related wiki entries, search-ranked memory, and recent audit events. Includes handoff summary, blockers, progress, and retrieved memory sections.
 - **`mdocs_audit`** — Query the audit log for events (filter by initiative, type, date)
 - **`mdocs_validate`** — Validate initiative/wiki integrity, cross-link graph (broken refs, missing backlinks, completion gates)
+- **`mdocs_index_check`** — Check and repair INDEX consistency for initiatives and wiki (`check` mode reports issues; `repair` mode regenerates indices)
 - **`mdocs_resume`** — Resume an initiative with next action, blockers, latest progress, and validation. Without an ID, lists all resumable initiatives with recommendations.
 - **`mdocs_lookup`** — Resolve an initiative by id, title, slug, or filename
 
@@ -271,7 +276,7 @@ The plugin registers these opencode hooks:
 | `tool.execute.after` | Log tool calls to active initiative |
 | `event` | Record significant events (workflow advances, creates) |
 | `permission.ask` | Auto-allow tools aligned with current step |
-| `tool` | Register `mdocs`, `mdocs_init`, `mdocs_status`, `mdocs_validate`, `mdocs_search`, `mdocs_lookup`, `mdocs_dispatch`, `mdocs_audit`, and `mdocs_resume` |
+| `tool` | Register `mdocs`, `mdocs_init`, `mdocs_status`, `mdocs_validate`, `mdocs_search`, `mdocs_lookup`, `mdocs_dispatch`, `mdocs_audit`, `mdocs_resume`, and `mdocs_index_check` |
 
 ## Development
 

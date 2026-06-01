@@ -4,7 +4,8 @@ title: "v1.2.0 Release Readiness"
 category: "release"
 created: "2026-06-01"
 updated: "2026-06-01"
-related_initiatives: []
+related_initiatives:
+  - prepare-v1-2-0-release
 tags: ["release","v1.2.0"]
 ---
 
