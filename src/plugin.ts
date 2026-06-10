@@ -189,7 +189,8 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
     // Event logging: record significant workflow events
     "event": (input: any) => {
       const significantEvents = ['workflow.advance', 'initiative.create', 'wiki.create'];
-      const eventType = input.type;
+      const eventType = input?.type || input?.event?.type || input?.eventType;
+      if (typeof eventType !== 'string') return;
       const activeInitiativeId = workflow.status().activeInitiative;
 
       // Audit log significant events

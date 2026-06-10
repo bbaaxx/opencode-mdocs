@@ -43,6 +43,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "test": "jest",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run build",
     "setup:local": "mkdir -p .opencode/agents && ln -sf ../../agents/mdocs-orchestrator.md .opencode/agents/mdocs-orchestrator.md"
   },
