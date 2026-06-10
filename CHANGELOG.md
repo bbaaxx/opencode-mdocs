@@ -5,13 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-06-09
+
+### Fixed
+
+- Event hook now accepts opencode event payloads with nested `event.type` or `eventType`, not only top-level `type`.
+- Unrecognized event payloads are ignored instead of throwing in the event hook.
+- Added `prepare` script to `package.json` so GitHub installs and npm installs from git build `dist` before plugin loading.
+
+### Tests
+
+- Added regression coverage for opencode event envelopes without a top-level `type`.
+- Added regression coverage that the package builds `dist` during git installs via the `prepare` script.
+
 ## [1.3.1] - 2026-06-03
 
 ### Fixed
 
 - Restored backward-compatible opencode plugin loading for existing configs using `"plugin": ["opencode-mdocs"]`. The package root now exposes only the default plugin entrypoint so opencode does not try to execute public API classes such as `WikiManager` as plugins.
 - Moved programmatic public API imports to `opencode-mdocs/api` (`createPlugin`, `WikiManager`, and their option types), keeping plugin runtime loading separate from library API usage.
-- Corrected README consumer setup to use `"plugin": ["opencode-mdocs"]`; the previously documented `opencode-mdocs/plugin` subpath is not accepted by opencode's npm plugin installer.
+- Corrected README consumer setup to use `"plugin": ["opencode-mdocs"]"; the previously documented `opencode-mdocs/plugin` subpath is not accepted by opencode's npm plugin installer.
 
 ### Tests
 
